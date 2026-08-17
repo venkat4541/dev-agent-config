@@ -25,6 +25,8 @@ All choices live in `opencode/opencode.jsonc`; change that file and run `agentct
 
 Run `agentctl review-models` occasionally (and after an OpenCode Go catalog update). It compares the live catalog with the configured routing, remembers newly seen models locally on that Mac, and prints a planning brief for a deliberate task-specific routing review. After choosing replacements, run `agentctl review-models --apply`; it validates every selection against the live catalog and rewrites routing only after an interactive confirmation.
 
+Scope routing runs automatically before implementation requests through the global guardrails. `/route-task <request>` remains available when you want the same routing decision as a standalone, read-only report before starting work.
+
 | Work | Agent(s) | Model |
 | --- | --- | --- |
 | Cheap exploration/context gathering | explorer | `opencode-go/mimo-v2.5` |

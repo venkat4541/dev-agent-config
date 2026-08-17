@@ -111,6 +111,8 @@ For a non-trivial request, use this sequence:
 
 Preserve the repository’s architecture and conventions. The global setup must never impose the greenfield stack on an established project.
 
+The same classification runs automatically before implementation requests. Run `/route-task` explicitly when you want to inspect and approve the route before the work begins.
+
 ### 4. Add Superset support after project-specific inspection
 
 Inspect the package manager, lockfile, environment files, services, ports, and monorepo layout first. Create `.superset/config.json` only after that review.

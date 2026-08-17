@@ -6,6 +6,8 @@ Preserve established conventions and reuse existing abstractions where they fit.
 
 Plan non-trivial changes before implementation. Keep TypeScript safe; maintain clear server/client boundaries; validate untrusted input; and never expose secrets, credentials, or privileged service-role access to clients or source control.
 
+Before acting on an implementation request, classify its scope and select the least-cost safe route. Use `quick-fix` for a well-understood, localized defect with focused regression coverage; use the relevant implementation specialist for a bounded change; require exploration and architecture planning for cross-boundary features or uncertainty; and require architecture plus independent review/security review for migrations, authentication, authorization, RLS, sensitive data, production incidents, or difficult debugging. State the selected route briefly before editing. Use `/route-task` when a visible standalone routing report is useful.
+
 Verify changes with the project’s relevant typecheck, lint, tests, and production build. Make database changes through reviewed migrations, maintain least-privilege authorization (including Supabase RLS where applicable), and document required operational steps.
 
 Treat a verified, independently reviewable milestone as a Git checkpoint. Before creating dependent worktrees, handing off work, switching Macs, or ending a substantial task: inspect status and diff; ensure secrets and generated local files are excluded; commit only the intended coherent change with a clear, descriptive message; and push the branch. Report the commit SHA, remote branch, verification evidence, and any known follow-up. Never commit or push unverified changes merely for synchronization.
