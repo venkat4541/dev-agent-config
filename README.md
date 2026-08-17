@@ -16,7 +16,7 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Agent registrations and model policy | `opencode/opencode.jsonc` | Centralized routing and permissions |
 | Agent role prompts | `opencode/agents/` | Reusable specialist behavior |
 | Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
-| Skills | `opencode/skills/` | On-demand TypeScript, React, frontend design, Supabase, testing, accessibility, security guidance |
+| Skills | `opencode/skills/` | On-demand procedures for the stack and workflow (see below) |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
 | Repository checks | `scripts/check.sh`, `.github/workflows/check.yml` | Lint, secret scan, and config-load validation |
 
@@ -58,6 +58,31 @@ Reading is broadly allowed, but paths that hold credentials — `.env` files, ke
 - `tester`: test design and verification; edits require approval.
 - `reviewer`: independent read-only diff review.
 - `security-reviewer`: independent read-only auth, RLS, secrets, and boundary review.
+
+## Skills
+
+Skills are loaded on demand, selected by their description, so each one states the situation that should pull it in rather than a topic label. They carry procedures, decision rules, and footgun lists — not restatements of the agent prompts.
+
+| Skill | Pulled in when |
+| --- | --- |
+| `typescript` | fighting a type error, designing a shared signature, or tempted by `as`/`any` |
+| `react` | deciding where state lives, writing or removing an effect, diagnosing re-renders |
+| `nextjs` | routes, server actions, server/client boundary, or stale-data caching problems |
+| `node` | async resources, outbound calls, timeouts, errors, logging, shutdown |
+| `supabase` | client selection, sessions in SSR, generated types, storage, anon vs service-role |
+| `rls-policies` | any table the browser can reach, tenant isolation, `USING` vs `WITH CHECK` |
+| `migrations` | schema changes, backfills, expand/migrate/contract, lock avoidance |
+| `security` | new endpoint or action, untrusted input, secrets, what a response exposes |
+| `testing` | choosing the test level, or a test that is flaky, slow, or proves nothing |
+| `playwright` | E2E journeys, locator choice, auth state reuse, trace-based flake diagnosis |
+| `debugging` | unclear failure, environment divergence, intermittency, a fix that didn't work |
+| `performance` | a measured slowness — queries, waterfalls, bundle size, re-render storms |
+| `dependencies` | adding, upgrading, or removing a package; audit findings |
+| `accessibility` | any interactive UI, dialog, form, or focus and announcement behaviour |
+| `frontend-design` | a new surface with no pattern to copy; judging whether a UI is finished |
+| `git-workflow` | commit scope, checkpoints, worktree splits, handoff reports |
+
+`agentctl check` verifies each skill's frontmatter name matches its directory and that a description is present, since either fault breaks selection silently.
 
 ## Install and synchronize
 

@@ -88,6 +88,22 @@ for agent in explorer architect reviewer security-reviewer tester; do
   fi
 done
 
+# A skill is discovered by directory name but selected by its description, so a
+# name/directory mismatch or a missing description silently breaks triggering.
+skill_problems=""
+for skill_file in opencode/skills/*/SKILL.md; do
+  skill_dir="$(basename "$(dirname "$skill_file")")"
+  skill_name="$(sed -n 's/^name: //p' "$skill_file" | head -1)"
+  skill_desc="$(sed -n 's/^description: //p' "$skill_file" | head -1)"
+  [[ "$skill_name" == "$skill_dir" ]] || skill_problems+=" $skill_dir(name=$skill_name)"
+  [[ -n "$skill_desc" ]] || skill_problems+=" $skill_dir(no-description)"
+done
+if [[ -n "$skill_problems" ]]; then
+  fail "Skill frontmatter problems:$skill_problems"
+else
+  pass "All $(find opencode/skills -name SKILL.md | wc -l | tr -d ' ') skills have a matching name and a description"
+fi
+
 # Every agent registration must point at a prompt file that exists.
 while IFS= read -r prompt_ref; do
   prompt_file="opencode/${prompt_ref#./}"
