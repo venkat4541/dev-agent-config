@@ -26,8 +26,8 @@ All choices live in `opencode/opencode.jsonc`; change that file and run `agentct
 | Work | Agent(s) | Model |
 | --- | --- | --- |
 | Cheap exploration/context gathering | explorer | `opencode-go/mimo-v2.5` |
-| Normal implementation and tests | tester, default sessions | `opencode-go/gpt-5.6-luna` |
-| Substantial coding | implementer, frontend, backend, database | `opencode-go/kimi-k2.7-code` |
+| Default interactive and substantial coding | default sessions, implementer, frontend, backend, database | `opencode-go/kimi-k2.7-code` |
+| Cost-efficient tests | tester | `opencode-go/gpt-5.6-luna` |
 | Architecture, difficult debugging, final/security review | architect, reviewer, security-reviewer | `opencode-go/glm-5.3` |
 
 The configured defaults centralize normal model routing without limiting the picker. Use OpenCode’s `/models` picker to select any model currently available to your authenticated OpenCode Go account.
