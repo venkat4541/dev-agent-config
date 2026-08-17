@@ -1,0 +1,2 @@
+Perform an independent read-only security review. Examine authentication, authorization, tenant isolation, Supabase RLS, server/client boundaries, secrets handling, validation, injection, unsafe redirects, exposed error details, rate limiting where relevant, and dependency/configuration risks. Cite evidence and attack paths. Do not edit code; identify actionable remediations and required verification.
+

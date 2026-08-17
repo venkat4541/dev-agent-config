@@ -1,0 +1,117 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "manual",
+
+  // Change model routing only here. All IDs were verified against the local
+  // OpenCode Go model catalog on 2026-08-17.
+  "model": "opencode-go/gpt-5.6-luna",
+  "provider": {
+    "opencode-go": {
+      "whitelist": [
+        "mimo-v2.5",
+        "gpt-5.6-luna",
+        "kimi-k2.7-code",
+        "glm-5.3"
+      ]
+    }
+  },
+
+  // Safe defaults: non-read-only shell activity and external paths require a
+  // deliberate approval. Individual agents further restrict this baseline.
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "skill": "allow",
+    "edit": "ask",
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git rev-parse*": "allow",
+      "git ls-files*": "allow",
+      "rg *": "allow",
+      "find *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "sed *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "git push*": "deny"
+    },
+    "external_directory": "ask",
+    "webfetch": "ask",
+    "websearch": "ask"
+  },
+
+  "agent": {
+    "explorer": {
+      "description": "Read-only repository investigation and convention discovery",
+      "mode": "subagent",
+      "model": "opencode-go/mimo-v2.5",
+      "prompt": "{file:./agents/explorer.md}",
+      "permission": { "edit": "deny", "external_directory": "deny" }
+    },
+    "architect": {
+      "description": "Architecture decisions and implementation planning",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3",
+      "prompt": "{file:./agents/architect.md}",
+      "permission": { "edit": "deny", "external_directory": "deny" }
+    },
+    "implementer": {
+      "description": "Focused production implementation",
+      "mode": "all",
+      "model": "opencode-go/kimi-k2.7-code",
+      "prompt": "{file:./agents/implementer.md}",
+      "permission": { "edit": "allow", "external_directory": "ask" }
+    },
+    "frontend": {
+      "description": "UI, React, Next.js, accessibility, and client boundaries",
+      "mode": "all",
+      "model": "opencode-go/kimi-k2.7-code",
+      "prompt": "{file:./agents/frontend.md}",
+      "permission": { "edit": "allow", "external_directory": "ask" }
+    },
+    "backend": {
+      "description": "Server, API, Node.js, and integration implementation",
+      "mode": "all",
+      "model": "opencode-go/kimi-k2.7-code",
+      "prompt": "{file:./agents/backend.md}",
+      "permission": { "edit": "allow", "external_directory": "ask" }
+    },
+    "database": {
+      "description": "Postgres, Supabase migrations, RLS, and data access",
+      "mode": "all",
+      "model": "opencode-go/kimi-k2.7-code",
+      "prompt": "{file:./agents/database.md}",
+      "permission": { "edit": "allow", "external_directory": "ask" }
+    },
+    "tester": {
+      "description": "Test design, implementation, and verification",
+      "mode": "all",
+      "model": "opencode-go/gpt-5.6-luna",
+      "prompt": "{file:./agents/tester.md}",
+      "permission": { "edit": "ask", "external_directory": "deny" }
+    },
+    "reviewer": {
+      "description": "Independent read-only correctness and maintainability review",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3",
+      "prompt": "{file:./agents/reviewer.md}",
+      "permission": { "edit": "deny", "external_directory": "deny" }
+    },
+    "security-reviewer": {
+      "description": "Independent read-only security and authorization review",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3",
+      "prompt": "{file:./agents/security-reviewer.md}",
+      "permission": { "edit": "deny", "external_directory": "deny" }
+    }
+  }
+}

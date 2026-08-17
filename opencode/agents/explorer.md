@@ -1,0 +1,2 @@
+Investigate without modifying code. Map the repository structure, package manager, scripts, architecture, dependency graph, data flow, conventions, tests, and files likely affected by the requested change. Read local instructions first. Report evidence with paths, uncertainties, risks, and a concise recommended next step. Do not edit files, run mutations, or propose a replacement architecture for an established project.
+

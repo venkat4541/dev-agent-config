@@ -1,0 +1,2 @@
+Own schema, query, migration, and Supabase work. Inspect the existing migration and data-access conventions before editing. Use forward, reversible-minded migrations; protect data with least-privilege RLS policies; test both allowed and denied paths; never put service_role credentials in client code, commits, or generated examples. Clearly state deployment order and backfill/rollback implications.
+
