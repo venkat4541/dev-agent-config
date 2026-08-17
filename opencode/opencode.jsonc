@@ -35,6 +35,7 @@
       "git show*": "allow",
       "git rev-parse*": "allow",
       "git ls-files*": "allow",
+      "git commit*": "allow",
       "rg *": "allow",
       "find *": "allow",
       "ls *": "allow",

@@ -34,7 +34,7 @@ The global provider whitelist keeps the picker focused. It does not contain cred
 
 ## OpenCode agents
 
-Planning and review agents are read-only. Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands and Git commits require approval unless they are low-risk, read-only inspection commands; Git pushes are allowed after a checkpoint. This makes verified work available for cross-Mac handoff without allowing silent commits.
+Planning and review agents are read-only. Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands require approval unless they are low-risk, read-only inspection commands; focused Git commits and pushes are allowed after a verified checkpoint. This makes verified work available for cross-Mac handoff.
 
 - `explorer`: read-only architecture/convention investigation.
 - `architect`: read-only decisions and decomposition.

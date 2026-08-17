@@ -245,7 +245,7 @@ git pull --ff-only
 git status --short
 ```
 
-Record the commit SHA, branch, checks run, remaining risks, and next action in the pull request or task handoff. OpenCode will request approval before it commits, then pushes are allowed so a completed checkpoint is available from any Mac.
+Record the commit SHA, branch, checks run, remaining risks, and next action in the pull request or task handoff. OpenCode may commit and push a verified, focused checkpoint so it is available from any Mac.
 
 ## Current ai-central example
 
