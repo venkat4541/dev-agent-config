@@ -15,7 +15,7 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Global guardrails | `opencode/AGENTS.md` | Architecture preservation, safety, verification, accessibility |
 | Agent registrations and model policy | `opencode/opencode.jsonc` | Centralized routing and permissions |
 | Agent role prompts | `opencode/agents/` | Reusable specialist behavior |
-| Commands | `opencode/commands/` | `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
+| Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
 | Skills | `opencode/skills/` | On-demand TypeScript, React, frontend design, Supabase, testing, accessibility, security guidance |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
 
@@ -28,6 +28,7 @@ Run `agentctl review-models` occasionally (and after an OpenCode Go catalog upda
 | Work | Agent(s) | Model |
 | --- | --- | --- |
 | Cheap exploration/context gathering | explorer | `opencode-go/mimo-v2.5` |
+| Contained, well-understood bug fix | quick-fix | `opencode-go/gpt-5.6-luna` |
 | Default interactive and substantial coding | default sessions, implementer, frontend, backend, database | `opencode-go/kimi-k2.7-code` |
 | Cost-efficient tests | tester | `opencode-go/gpt-5.6-luna` |
 | Architecture, difficult debugging, final/security review | architect, reviewer, security-reviewer | `opencode-go/glm-5.3` |
@@ -40,6 +41,7 @@ Planning and review agents are read-only. Implementers can edit only in the curr
 
 - `explorer`: read-only architecture/convention investigation.
 - `architect`: read-only decisions and decomposition.
+- `quick-fix`: contained, well-understood bug fixes; escalates unclear or risky scope.
 - `implementer`: focused general implementation.
 - `frontend`: React/Next.js/UI/accessibility specialization.
 - `backend`: Node/server/API specialization.

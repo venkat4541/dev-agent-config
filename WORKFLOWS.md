@@ -102,11 +102,12 @@ opencode .
 
 For a non-trivial request, use this sequence:
 
-1. `/analyze-project <request>` — read-only architecture, conventions, dependencies, and affected files.
-2. `/plan-feature <request>` — evidence-based implementation plan, risks, migrations, tests, and genuinely independent workstreams.
-3. Implement only the approved scope.
-4. `/verify <scope>` — use the repository’s actual typecheck, lint, test, and build commands.
-5. `/review <scope>` — independent read-only review.
+1. `/route-task <request>` — cheap read-only scope classification and recommended agent/model route.
+2. `/analyze-project <request>` — read-only architecture, conventions, dependencies, and affected files when the route is not a contained quick fix.
+3. `/plan-feature <request>` — evidence-based implementation plan, risks, migrations, tests, and genuinely independent workstreams for a feature or high-risk task.
+4. Implement only the approved scope.
+5. `/verify <scope>` — use the repository’s actual typecheck, lint, test, and build commands.
+6. `/review <scope>` — independent read-only review.
 
 Preserve the repository’s architecture and conventions. The global setup must never impose the greenfield stack on an established project.
 
@@ -204,11 +205,12 @@ code .
 In OpenCode, run:
 
 ```text
+/route-task Add account notification preferences, including email delivery controls.
 /analyze-project Add account notification preferences, including email delivery controls.
 /plan-feature Add account notification preferences, including email delivery controls.
 ```
 
-Those commands assign the read-only `explorer` and `architect` agents. Review the plan before implementation. It should identify the existing data/API/UI conventions, authorization and RLS impact, tests, rollout concerns, and whether any work is truly independent.
+Those commands first assign the low-cost read-only `explorer` route classifier, then the `explorer` and `architect` agents for investigation and planning. Review the route and plan before implementation. They should identify the existing data/API/UI conventions, authorization and RLS impact, tests, rollout concerns, appropriate models, and whether any work is truly independent.
 
 ### 4. Assign implementation specialists deliberately
 
@@ -228,6 +230,7 @@ Role selection is based on affected boundaries, not a fixed pipeline:
 | --- | --- |
 | Repository investigation only | `explorer` |
 | Difficult tradeoffs or feature decomposition | `architect` |
+| Contained, well-understood bug with focused regression coverage | `quick-fix` |
 | General focused implementation | `implementer` |
 | React/Next.js/UI/accessibility work | `frontend` |
 | Server actions, APIs, integrations, Node work | `backend` |

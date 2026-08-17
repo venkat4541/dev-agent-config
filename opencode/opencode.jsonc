@@ -62,6 +62,13 @@
       "prompt": "{file:./agents/implementer.md}",
       "permission": { "edit": "allow", "external_directory": "ask" }
     },
+    "quick-fix": {
+      "description": "Contained bug fixes with focused verification",
+      "mode": "all",
+      "model": "opencode-go/gpt-5.6-luna",
+      "prompt": "{file:./agents/quick-fix.md}",
+      "permission": { "edit": "allow", "external_directory": "ask" }
+    },
     "frontend": {
       "description": "UI, React, Next.js, accessibility, and client boundaries",
       "mode": "all",
