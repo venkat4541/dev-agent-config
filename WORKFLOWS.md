@@ -146,17 +146,13 @@ superset projects list --local --json
 
 ### 6. Create a task worktree
 
-Start from the desired already-pushed base branch:
+For normal feature work, start from a clean checkout of the desired already-pushed base branch and run:
 
 ```bash
-superset ws create --local \
-  --project <project-id> \
-  --name concise-task-name \
-  --branch feat/concise-task-name \
-  --base-branch <pushed-base-branch>
+agentctl start-task concise-task-name
 ```
 
-Superset worktrees are based on remote branch history. Commit and push shared project setup before using it as a worktree base.
+The command detects the local Superset project by repository path, verifies the base branch exists on `origin`, and creates `feat/concise-task-name`. Use `agentctl start-task concise-task-name other-pushed-branch` only when deliberately branching from a different base. If the repository has not yet been registered on this Mac, the command registers it before creating the task worktree. Superset worktrees are based on remote branch history, so commit and push shared project setup before using it as a worktree base.
 
 Inside the new worktree:
 
@@ -187,11 +183,7 @@ Resolve any output from `git status --short` before continuing. The base branch 
 ### 2. Create the feature worktree
 
 ```bash
-superset ws create --local \
-  --project <project-id> \
-  --name account-notifications \
-  --branch feat/account-notifications \
-  --base-branch <base-branch>
+agentctl start-task account-notifications
 ```
 
 Open the returned worktree path in OpenCode and VS Code:
@@ -361,11 +353,7 @@ Create a worktree from the current pushed branch with:
 
 ```bash
 cd /Users/venkat/projects/ai-central
-superset ws create --local \
-  --project baf869bd-ad04-49ca-ab8d-a38bb031f819 \
-  --name moveassistant-feature \
-  --branch feat/moveassistant-feature \
-  --base-branch agent/publish-local-changes
+agentctl start-task moveassistant-feature
 ```
 
 Then open OpenCode in that worktree. Its Superset setup runs the frozen pnpm install and locally copies the known ignored MoveAssistant environment files; it never commits them.

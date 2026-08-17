@@ -16,6 +16,7 @@ Usage:
   agentctl doctor
   agentctl sync
   agentctl review-models [--apply]
+  agentctl start-task <task-name> [base-branch]
   agentctl init-existing [path]
   agentctl init-next <project-name>
 EOF
@@ -35,6 +36,63 @@ detect_package_manager() {
   elif [[ -f package-lock.json ]]; then echo npm
   else echo unknown
   fi
+}
+
+start_task() {
+  local task_name="${1:-}" base_branch="${2:-}" project_root current_branch projects_json project_id
+  local branch_name
+
+  [[ -n "$task_name" && "$task_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
+    echo "Provide a lowercase kebab-case task name, for example: account-notifications." >&2
+    exit 1
+  }
+  command -v superset >/dev/null 2>&1 || { echo "Superset is required; run agentctl doctor." >&2; exit 1; }
+  command -v jq >/dev/null 2>&1 || { echo "jq is required; run ./scripts/install-tools.sh." >&2; exit 1; }
+  git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Run this inside a Git repository." >&2; exit 1; }
+
+  project_root="$(git rev-parse --show-toplevel)"
+  cd "$project_root"
+  require_clean_git
+  current_branch="$(git branch --show-current)"
+  [[ -n "$current_branch" ]] || { echo "Cannot create a task from a detached HEAD." >&2; exit 1; }
+  base_branch="${base_branch:-$current_branch}"
+
+  git fetch origin "$base_branch"
+  git rev-parse --verify --quiet "refs/remotes/origin/$base_branch" >/dev/null || {
+    echo "Base branch is not available on origin: $base_branch. Push it first." >&2
+    exit 1
+  }
+
+  projects_json="$(superset projects list --local --json)"
+  project_id="$(jq -r --arg path "$project_root" '.[] | select(.path == $path) | .id' <<<"$projects_json" | head -1)"
+  if [[ -z "$project_id" || "$project_id" == "null" ]]; then
+    echo "Registering this repository with Superset on this Mac..."
+    superset projects create --local --name "$(basename "$project_root")" --import "$project_root" >/dev/null
+    projects_json="$(superset projects list --local --json)"
+    project_id="$(jq -r --arg path "$project_root" '.[] | select(.path == $path) | .id' <<<"$projects_json" | head -1)"
+  fi
+  [[ -n "$project_id" && "$project_id" != "null" ]] || {
+    echo "Superset project registration could not be verified." >&2
+    exit 1
+  }
+
+  branch_name="feat/$task_name"
+  echo "Creating Superset task worktree: $branch_name (base: $base_branch)"
+  superset ws create --local \
+    --project "$project_id" \
+    --name "$task_name" \
+    --branch "$branch_name" \
+    --base-branch "$base_branch" \
+    --skip-branch-prefix
+
+  cat <<EOF
+
+Next: open the worktree path shown above, then run:
+  opencode .
+
+Implementation requests are automatically scope-routed. For a visible routing
+report before work begins, use: /route-task <request>
+EOF
 }
 
 review_models() {
@@ -261,6 +319,7 @@ case "$command" in
   doctor) exec "$repo_root/scripts/doctor.sh" ;;
   sync) exec "$repo_root/scripts/sync-config.sh" ;;
   review-models) shift; review_models "$@" ;;
+  start-task) shift; start_task "${1:-}" "${2:-}" ;;
   init-existing) shift; init_existing "${1:-.}" ;;
   init-next) shift; init_next "${1:-}" ;;
   *) usage; exit 2 ;;
