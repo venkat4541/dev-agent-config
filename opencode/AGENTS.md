@@ -8,5 +8,6 @@ Plan non-trivial changes before implementation. Keep TypeScript safe; maintain c
 
 Verify changes with the project’s relevant typecheck, lint, tests, and production build. Make database changes through reviewed migrations, maintain least-privilege authorization (including Supabase RLS where applicable), and document required operational steps.
 
-Build accessible, secure software. For substantial changes, request independent review before declaring completion.
+Treat a verified, independently reviewable milestone as a Git checkpoint. Before creating dependent worktrees, handing off work, switching Macs, or ending a substantial task: inspect status and diff; ensure secrets and generated local files are excluded; commit only the intended coherent change with a clear, descriptive message; and push the branch. Report the commit SHA, remote branch, verification evidence, and any known follow-up. Never commit or push unverified changes merely for synchronization.
 
+Build accessible, secure software. For substantial changes, request independent review before declaring completion.

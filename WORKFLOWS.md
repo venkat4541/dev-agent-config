@@ -220,6 +220,33 @@ Review `superset.config.json.example`, adapt it to the project, commit it, regis
 8. Commit and push only the intended task changes.
 9. Open/review/merge the pull request only when verification passes.
 
+## Cross-Mac Git checkpoints
+
+GitHub is the synchronization point between Macs. A local worktree is not a handoff until its intended, verified change is committed and pushed.
+
+Create a checkpoint after project onboarding or shared setup, after each independently reviewable task, and before switching Macs or creating dependent worktrees. At a checkpoint:
+
+```bash
+git status --short
+git diff --check
+git add <intended-files>
+git commit -m "<focused description>"
+git push -u origin HEAD
+```
+
+Before staging, inspect the diff and confirm `.env*`, credentials, service-role keys, and other local/generated files are not included. Run the project’s applicable checks before committing. Never push an incomplete or unverified change solely to make it available on another Mac; instead finish a coherent safe unit, or use a clearly labelled draft branch with its limitations documented.
+
+On the other Mac, start from the pushed branch:
+
+```bash
+git fetch origin
+git switch <branch>
+git pull --ff-only
+git status --short
+```
+
+Record the commit SHA, branch, checks run, remaining risks, and next action in the pull request or task handoff. OpenCode will request approval before it commits, then pushes are allowed so a completed checkpoint is available from any Mac.
+
 ## Current ai-central example
 
 On this Mac, `ai-central` is registered with Superset as:
@@ -253,4 +280,3 @@ Then open OpenCode in that worktree. Its Superset setup runs the frozen pnpm ins
 | Worktree misses new setup files | Commit and push the setup branch first; Superset worktrees use remote branch history. |
 | Local environment is missing in a worktree | Add an explicit, ignored-file copy rule to the project `.superset/setup.sh`; do not commit the environment file. |
 | Tailscale is not available | Install `tailscale-app` interactively and complete System Settings approval. |
-

@@ -42,7 +42,7 @@
       "sed *": "allow",
       "head *": "allow",
       "tail *": "allow",
-      "git push*": "deny"
+      "git push*": "allow"
     },
     "external_directory": "ask",
     "webfetch": "ask",

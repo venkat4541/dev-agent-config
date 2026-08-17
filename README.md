@@ -34,7 +34,7 @@ The global provider whitelist keeps the picker focused. It does not contain cred
 
 ## OpenCode agents
 
-Planning and review agents are read-only. Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands require approval unless they are low-risk, read-only inspection commands. Git pushes are denied globally.
+Planning and review agents are read-only. Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands and Git commits require approval unless they are low-risk, read-only inspection commands; Git pushes are allowed after a checkpoint. This makes verified work available for cross-Mac handoff without allowing silent commits.
 
 - `explorer`: read-only architecture/convention investigation.
 - `architect`: read-only decisions and decomposition.
@@ -119,7 +119,7 @@ For a pnpm Next.js project, `templates/new-next-supabase/superset.config.json.ex
 3. Run `./scripts/bootstrap-mac.sh` and `agentctl doctor`.
 4. Complete the separate logins above and verify `/models` in OpenCode.
 
-Use `agentctl sync` after pulling configuration changes. Keep credentials, local `.env` files, and Superset/OpenCode/Tailscale sessions local to each Mac.
+Use `agentctl sync` after pulling configuration changes. Keep credentials, local `.env` files, and Superset/OpenCode/Tailscale sessions local to each Mac. For application work, commit and push each verified milestone before switching Macs; see [Cross-Mac Git checkpoints](WORKFLOWS.md#cross-mac-git-checkpoints).
 
 ## Troubleshooting and updates
 
