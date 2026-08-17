@@ -15,7 +15,7 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Global guardrails | `opencode/AGENTS.md` | Architecture preservation, safety, verification, accessibility |
 | Agent registrations and model policy | `opencode/opencode.jsonc` | Centralized routing and permissions |
 | Agent role prompts | `opencode/agents/` | Reusable specialist behavior |
-| Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
+| Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/grill`, `/implement-feature`, `/review`, `/verify` |
 | Skills | `opencode/skills/` | On-demand procedures for the stack and workflow (see below) |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
 | Repository checks | `scripts/check.sh`, `.github/workflows/check.yml` | Lint, secret scan, and config-load validation |
@@ -81,6 +81,17 @@ Skills are loaded on demand, selected by their description, so each one states t
 | `accessibility` | any interactive UI, dialog, form, or focus and announcement behaviour |
 | `frontend-design` | a new surface with no pattern to copy; judging whether a UI is finished |
 | `git-workflow` | commit scope, checkpoints, worktree splits, handoff reports |
+
+Process skills, which gate work rather than describe a domain:
+
+| Skill | Pulled in when |
+| --- | --- |
+| `brainstorming` | the ask is vague enough that two readings produce different work |
+| `grill-me` | a plan exists and is about to be built, especially if hard to reverse |
+| `test-driven-development` | working test-first by choice, or proving a defect fix with a failing test |
+| `writing-skills` | authoring or revising a skill here, or fixing one that mis-triggers |
+
+The intended sequence for substantial work is `brainstorming` → `/plan-feature` → `/grill` → implement → `/verify` → `/review`. Each stage is skippable for small work; the point is that skipping is a decision rather than an omission.
 
 `agentctl check` verifies each skill's frontmatter name matches its directory and that a description is present, since either fault breaks selection silently.
 
