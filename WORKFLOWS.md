@@ -63,7 +63,10 @@ git pull --ff-only
 ./scripts/install-tools.sh
 agentctl sync
 agentctl doctor
+agentctl review-models
 ```
+
+Run `agentctl review-models` whenever OpenCode Go releases models, or monthly if you actively use several model roles. Use its generated brief in an OpenCode planning session, then run `agentctl review-models --apply` to select and confirm a validated routing update. Review, commit, and push that configuration checkpoint.
 
 ## Existing project workflow
 

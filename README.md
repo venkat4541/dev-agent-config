@@ -23,6 +23,8 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 
 All choices live in `opencode/opencode.jsonc`; change that file and run `agentctl sync` to apply a new policy. The installed OpenCode 1.18.18 catalog was inspected on 2026-08-17 and confirmed these OpenCode Go IDs. Account-level availability still requires an OpenCode Go login; use `/models` after connecting to confirm it for that Mac.
 
+Run `agentctl review-models` occasionally (and after an OpenCode Go catalog update). It compares the live catalog with the configured routing, remembers newly seen models locally on that Mac, and prints a planning brief for a deliberate task-specific routing review. After choosing replacements, run `agentctl review-models --apply`; it validates every selection against the live catalog and rewrites routing only after an interactive confirmation.
+
 | Work | Agent(s) | Model |
 | --- | --- | --- |
 | Cheap exploration/context gathering | explorer | `opencode-go/mimo-v2.5` |
@@ -124,6 +126,7 @@ Use `agentctl sync` after pulling configuration changes. Keep credentials, local
 ## Troubleshooting and updates
 
 - `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings.
+- `agentctl review-models` verifies the live OpenCode Go catalog against routing and flags new or unavailable models; `agentctl review-models --apply` updates chosen routing after confirmation. It stores only a local, non-secret model-name snapshot under `~/.cache/agentctl/`.
 - If OpenCode does not see agents, run `opencode agent list` and check that the relevant path under `~/.config/opencode` is a symlink.
 - If a model is unavailable, use OpenCode `/models` to confirm account availability, then update centralized default routing if needed and run `agentctl sync`.
 - Superset CLI commands evolve while the product is in beta; update it with Homebrew and consult `superset --help` before relying on a new workflow.
