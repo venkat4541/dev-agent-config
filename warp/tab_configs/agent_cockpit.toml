@@ -1,0 +1,36 @@
+name = "Agent Cockpit"
+title = "Agent Cockpit · {{project}}"
+color = "cyan"
+
+[[panes]]
+id = "root"
+split = "horizontal"
+children = ["opencode", "control"]
+
+[[panes]]
+id = "opencode"
+type = "terminal"
+directory = "{{project}}"
+commands = ["opencode ."]
+is_focused = true
+
+[[panes]]
+id = "control"
+split = "vertical"
+children = ["usage", "workspaces"]
+
+[[panes]]
+id = "usage"
+type = "terminal"
+directory = "{{project}}"
+commands = ["while true; do clear; printf 'OpenCode usage (refreshes every 60s)\\n\\n'; opencode stats --days 7 --models 10 --project \"\"; sleep 60; done"]
+
+[[panes]]
+id = "workspaces"
+type = "terminal"
+directory = "{{project}}"
+commands = ["while true; do clear; printf 'Superset workspaces (refreshes every 30s)\\nOpen the Superset app for live agent terminals.\\n\\n'; superset workspaces list --local; sleep 30; done"]
+
+[params.project]
+type = "repo"
+description = "Project repository"

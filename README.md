@@ -68,6 +68,10 @@ Bootstrap also adds one clearly marked, idempotent line group to `~/.zprofile` w
 
 The bundled Brewfile includes pnpm, Supabase CLI, Superset CLI, OpenCode, GitHub CLI, Tailscale, VS Code, and a few small development utilities. It does not run any login or put credentials into this repository.
 
+## Warp Agent Cockpit
+
+`agentctl sync` links the versioned Warp Tab Config into `~/.warp/tab_configs/agent_cockpit.toml`. In Warp, choose **Agent Cockpit** from the new-tab `+` menu, select a project repository, and it opens an OpenCode pane beside live project usage and local Superset-workspace panes. Use the Superset desktop app as the authoritative live view for agent terminals across worktrees and Macs.
+
 ## Separate per-Mac logins
 
 Perform these on each Mac after bootstrap:

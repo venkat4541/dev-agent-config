@@ -26,6 +26,8 @@ agentctl doctor
 
 The bootstrap installs the Brewfile tools, links the reusable OpenCode files from this repository into `~/.config/opencode`, links `agentctl` into `~/.local/bin`, and ensures Homebrew tools precede legacy Node shims in new terminal sessions.
 
+It also links the reusable **Agent Cockpit** Warp Tab Config. In Warp, use the new-tab `+` menu, select **Agent Cockpit**, and choose the project repository. The focused pane starts OpenCode; the other panes refresh project usage and local Superset workspace state. Keep the Superset desktop app open for the complete live agent/terminal dashboard.
+
 Open a new terminal after bootstrap. If `agentctl` is not found, run:
 
 ```bash

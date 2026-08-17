@@ -16,3 +16,4 @@ brew "superset-sh/tap/superset"
 
 cask "tailscale-app"
 cask "visual-studio-code"
+cask "warp"

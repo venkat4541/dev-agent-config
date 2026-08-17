@@ -6,6 +6,7 @@ repo_root="$(cd "$script_dir/.." && pwd)"
 source_dir="$repo_root/opencode"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
 local_bin="$HOME/.local/bin"
+warp_tab_configs="$HOME/.warp/tab_configs"
 
 backup_existing() {
   local target="$1"
@@ -33,11 +34,13 @@ link_item() {
 
 mkdir -p "$config_home"
 mkdir -p "$local_bin"
+mkdir -p "$warp_tab_configs"
 link_item "$source_dir/AGENTS.md" "$config_home/AGENTS.md"
 link_item "$source_dir/opencode.jsonc" "$config_home/opencode.jsonc"
 link_item "$source_dir/agents" "$config_home/agents"
 link_item "$source_dir/commands" "$config_home/commands"
 link_item "$source_dir/skills" "$config_home/skills"
 link_item "$repo_root/bin/agentctl" "$local_bin/agentctl"
+link_item "$repo_root/warp/tab_configs/agent_cockpit.toml" "$warp_tab_configs/agent_cockpit.toml"
 
-echo "OpenCode configuration is linked. Credentials remain in OpenCode's local credential store."
+echo "OpenCode and Warp configuration are linked. Credentials remain in local credential stores."

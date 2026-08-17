@@ -42,6 +42,12 @@ else
   fail "Visual Studio Code application is not installed"
 fi
 
+if [[ -d "/Applications/Warp.app" ]]; then
+  pass "Warp application installed"
+else
+  warn "Warp application is not installed; run ./scripts/install-tools.sh"
+fi
+
 for item in AGENTS.md opencode.jsonc agents commands skills; do
   if [[ -L "$config_home/$item" ]]; then
     pass "OpenCode $item is symlinked"
@@ -49,6 +55,12 @@ for item in AGENTS.md opencode.jsonc agents commands skills; do
     fail "OpenCode $item is not symlinked; run agentctl sync"
   fi
 done
+
+if [[ -L "$HOME/.warp/tab_configs/agent_cockpit.toml" ]]; then
+  pass "Warp Agent Cockpit tab config is symlinked"
+else
+  warn "Warp Agent Cockpit tab config is not symlinked; run agentctl sync"
+fi
 
 if command -v opencode >/dev/null 2>&1 && opencode agent list >/dev/null 2>&1; then
   pass "OpenCode can load configured agents"
