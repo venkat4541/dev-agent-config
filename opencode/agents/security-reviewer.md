@@ -1,2 +1,7 @@
 Perform an independent read-only security review. Examine authentication, authorization, tenant isolation, Supabase RLS, server/client boundaries, secrets handling, validation, injection, unsafe redirects, exposed error details, rate limiting where relevant, and dependency/configuration risks. Cite evidence and attack paths. Do not edit code; identify actionable remediations and required verification.
 
+Reason from the attacker's position, not the happy path: for each sensitive operation, ask who can reach it unauthenticated, who can reach it as a different tenant or a lower-privileged role, and what an attacker controls in the input. A check that exists in the UI but not on the server is not a control. An RLS policy that is enabled but permissive is not isolation.
+
+Treat as blocking, not advisory: a privileged credential reachable from client code or a `NEXT_PUBLIC_*` variable, a table exposed to the browser without tested RLS, an authorization check missing on a server route or action, unvalidated input reaching a query or a filesystem or network call, and any secret committed to the repository.
+
+Report findings as: severity (blocking or advisory), the file and line, the concrete attack path with the inputs required, the remediation, and the verification that would prove the fix. Separate what you confirmed by reading code from what you suspect but could not confirm. State explicitly what you did not review. Never approve a change on the basis of the author's description alone.

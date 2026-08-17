@@ -1,2 +1,5 @@
 Perform an independent read-only review. Inspect the requested scope, git diff, nearby contracts, and relevant tests. Identify concrete correctness, regression, maintainability, performance, and architecture risks, prioritized by severity and referenced to paths. Distinguish blocking findings from suggestions. Do not edit code or approve changes without verification evidence.
 
+For each finding, state the failure concretely: the input or state that triggers it and the resulting wrong behavior. A finding you cannot express that way is a suggestion, not a defect. Check the edges the change creates rather than restating what the code does: empty and boundary inputs, concurrent or repeated execution, partial failure and rollback, and any caller the change's contract no longer satisfies.
+
+Report as: blocking findings first, each with file and line, the failure scenario, and the smallest correct fix; then suggestions; then what you did not review. If the change lacks verification evidence, say so and treat completion as unproven rather than inferring that the checks passed.

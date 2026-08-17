@@ -68,6 +68,10 @@ agentctl doctor
 agentctl review-models
 ```
 
+Run `agentctl sync` from the checkout you intend to be authoritative. If more than one clone of this repository exists on a Mac, whichever one last ran `sync` owns `~/.config/opencode`; `agentctl doctor` now fails when a link points at a different checkout, naming the path it found.
+
+`agentctl check` lints the shell scripts, scans history for secrets, and confirms the OpenCode config loads. Run it before committing a configuration change. `agentctl unsync` removes only the links that point into this checkout and lists the backups available to restore.
+
 Run `agentctl review-models` whenever OpenCode Go releases models, or monthly if you actively use several model roles. Use its generated brief in an OpenCode planning session, then run `agentctl review-models --apply` to select and confirm a validated routing update. Review, commit, and push that configuration checkpoint.
 
 ## Existing project workflow
@@ -329,6 +333,8 @@ git push -u origin HEAD
 
 Before staging, inspect the diff and confirm `.env*`, credentials, service-role keys, and other local/generated files are not included. Run the project’s applicable checks before committing. Never push an incomplete or unverified change solely to make it available on another Mac; instead finish a coherent safe unit, or use a clearly labelled draft branch with its limitations documented.
 
+An agent may commit without asking, because a commit is local and reversible. Pushing prompts for approval every time, and force-pushing, `git reset --hard`, and `git clean` are denied outright — the checkpoint rule is enforced at the point where work becomes visible to another machine, rather than left to the agent's judgement.
+
 On the other Mac, start from the pushed branch:
 
 ```bash
@@ -340,23 +346,26 @@ git status --short
 
 Record the commit SHA, branch, checks run, remaining risks, and next action in the pull request or task handoff. OpenCode may commit and push a verified, focused checkpoint so it is available from any Mac.
 
-## Current ai-central example
+## Machine-specific notes
 
-On this Mac, `ai-central` is registered with Superset as:
-
-```text
-projectId: baf869bd-ad04-49ca-ab8d-a38bb031f819
-base branch: main
-```
-
-Create a worktree from pushed `main` with:
+Registered Superset project IDs, absolute checkout paths, and per-Mac quirks are host-specific and do not belong in a repository that is cloned onto several Macs. Keep them in `NOTES.local.md`, which is git-ignored:
 
 ```bash
-cd /Users/venkat/projects/ai-central
-agentctl start-task moveassistant-feature
+cd ~/projects/dev-agent-config
+$EDITOR NOTES.local.md
 ```
 
-Then open OpenCode in that worktree. Its Superset setup runs the frozen pnpm install and locally copies the known ignored MoveAssistant environment files; it never commits them.
+A useful shape for each project:
+
+```text
+project: <name>
+checkout: <absolute path on this Mac>
+superset projectId: <id from `superset projects list --local --json`>
+base branch: main
+local env files the Superset setup script copies: <names, never values>
+```
+
+`agentctl start-task` resolves the Superset project from the repository path automatically, so nothing here is required for daily use — it is a reference for when a project ID or a host-specific setup detail is needed.
 
 ## Troubleshooting
 
@@ -364,6 +373,9 @@ Then open OpenCode in that worktree. Its Superset setup runs the frozen pnpm ins
 | --- | --- |
 | `agentctl init-existing` refuses a dirty repo | Review, commit, or stash changes first; run it from the application repo, not `dev-agent-config`. |
 | `agentctl` is missing | Open a new terminal, or prepend `/opt/homebrew/bin:$HOME/.local/bin` to `PATH`. |
+| `doctor` reports a link pointing at a different checkout | Another clone of this repo owns `~/.config/opencode`. Run `agentctl sync` from the checkout you want authoritative, then re-run `doctor`. |
+| An agent asks to run `sed`, `find`, or `git push` | Expected. Those are not allowlisted: `sed -i` and `find -exec` would bypass the edit and directory rules, and pushing is outward-facing. Approve deliberately. |
+| A read-only agent tries to edit or commit | It cannot; `edit`, `git commit`, and `git push` are denied for `explorer`, `architect`, `reviewer`, `security-reviewer`, and `tester`. Route the work to an implementation agent. |
 | OpenCode has no models | Run `/connect` → OpenCode Go, then `/models`. |
 | Superset host service is stale | `superset stop && superset start`, then `superset status`. |
 | Worktree misses new setup files | Commit and push the setup branch first; Superset worktrees use remote branch history. |

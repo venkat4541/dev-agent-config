@@ -2,21 +2,42 @@
   "$schema": "https://opencode.ai/config.json",
   "share": "manual",
 
-  // Change model routing only here. All IDs were verified against the local
-  // OpenCode Go model catalog on 2026-08-17.
+  // Change model routing only here, then run `agentctl sync`.
+  // `agentctl review-models` validates these IDs against the live catalog.
   "model": "opencode-go/kimi-k2.7-code",
 
-  // Safe defaults: non-read-only shell activity and external paths require a
-  // deliberate approval. Individual agents further restrict this baseline.
+  // Baseline for every agent. Agents below tighten this; none may loosen it.
   "permission": {
     "*": "ask",
-    "read": "allow",
+
+    // Reading is broadly allowed, but credential material stays behind a
+    // prompt so no agent pulls a secret into a session transcript in passing.
+    "read": {
+      "*": "allow",
+      "**/.env": "ask",
+      "**/.env.*": "ask",
+      "**/.env.example": "allow",
+      "**/*.pem": "ask",
+      "**/*.key": "ask",
+      "**/.ssh/**": "ask",
+      "**/id_rsa*": "ask",
+      "**/id_ed25519*": "ask",
+      "**/auth.json": "ask",
+      "**/credentials*": "ask",
+      "**/service-role*": "ask"
+    },
+
     "glob": "allow",
     "grep": "allow",
     "list": "allow",
     "lsp": "allow",
     "skill": "allow",
     "edit": "ask",
+
+    // Read-only inspection only. `sed` and `find` are deliberately absent:
+    // `sed -i` and `find -exec` accept absolute paths, so allowing them would
+    // bypass both the `edit` rule above and `external_directory` entirely.
+    // Anything not listed falls through to a deliberate approval.
     "bash": {
       "*": "ask",
       "git status*": "allow",
@@ -25,16 +46,23 @@
       "git show*": "allow",
       "git rev-parse*": "allow",
       "git ls-files*": "allow",
-      "git commit*": "allow",
+      "git branch --list*": "allow",
+      "git remote -v*": "allow",
       "rg *": "allow",
-      "find *": "allow",
       "ls *": "allow",
       "cat *": "allow",
-      "sed *": "allow",
       "head *": "allow",
       "tail *": "allow",
-      "git push*": "allow"
+      "wc *": "allow",
+      // A focused commit is reversible and local. Pushing is outward-facing
+      // and cannot be verified from config, so it stays an explicit approval.
+      "git commit*": "allow",
+      "git push --force*": "deny",
+      "git push --force-with-lease*": "deny",
+      "git reset --hard*": "deny",
+      "git clean -*": "deny"
     },
+
     "external_directory": "ask",
     "webfetch": "ask",
     "websearch": "ask"
@@ -46,14 +74,58 @@
       "mode": "subagent",
       "model": "opencode-go/mimo-v2.5",
       "prompt": "{file:./agents/explorer.md}",
-      "permission": { "edit": "deny", "external_directory": "deny" }
+      // `edit: deny` alone is not read-only: the inherited shell allowlist has
+      // to be restated without any mutating command for the claim to hold.
+      "permission": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow",
+          "git ls-files*": "allow",
+          "git branch --list*": "allow",
+          "rg *": "allow",
+          "ls *": "allow",
+          "cat *": "allow",
+          "head *": "allow",
+          "tail *": "allow",
+          "wc *": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
     },
     "architect": {
       "description": "Architecture decisions and implementation planning",
       "mode": "subagent",
       "model": "opencode-go/glm-5.3",
       "prompt": "{file:./agents/architect.md}",
-      "permission": { "edit": "deny", "external_directory": "deny" }
+      "permission": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow",
+          "git ls-files*": "allow",
+          "git branch --list*": "allow",
+          "rg *": "allow",
+          "ls *": "allow",
+          "cat *": "allow",
+          "head *": "allow",
+          "tail *": "allow",
+          "wc *": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
     },
     "implementer": {
       "description": "Focused production implementation",
@@ -95,21 +167,84 @@
       "mode": "all",
       "model": "opencode-go/gpt-5.6-luna",
       "prompt": "{file:./agents/tester.md}",
-      "permission": { "edit": "ask", "external_directory": "deny" }
+      // Verification must never be the step that publishes work.
+      "permission": {
+        "edit": "ask",
+        "external_directory": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow",
+          "git ls-files*": "allow",
+          "rg *": "allow",
+          "ls *": "allow",
+          "cat *": "allow",
+          "head *": "allow",
+          "tail *": "allow",
+          "wc *": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
     },
     "reviewer": {
       "description": "Independent read-only correctness and maintainability review",
       "mode": "subagent",
       "model": "opencode-go/glm-5.3",
       "prompt": "{file:./agents/reviewer.md}",
-      "permission": { "edit": "deny", "external_directory": "deny" }
+      "permission": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow",
+          "git ls-files*": "allow",
+          "git branch --list*": "allow",
+          "rg *": "allow",
+          "ls *": "allow",
+          "cat *": "allow",
+          "head *": "allow",
+          "tail *": "allow",
+          "wc *": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
     },
     "security-reviewer": {
       "description": "Independent read-only security and authorization review",
       "mode": "subagent",
       "model": "opencode-go/glm-5.3",
       "prompt": "{file:./agents/security-reviewer.md}",
-      "permission": { "edit": "deny", "external_directory": "deny" }
+      "permission": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow",
+          "git ls-files*": "allow",
+          "git branch --list*": "allow",
+          "rg *": "allow",
+          "ls *": "allow",
+          "cat *": "allow",
+          "head *": "allow",
+          "tail *": "allow",
+          "wc *": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
     }
   }
 }

@@ -10,6 +10,8 @@ Before acting on an implementation request, classify its scope and select the le
 
 Verify changes with the project’s relevant typecheck, lint, tests, and production build. Make database changes through reviewed migrations, maintain least-privilege authorization (including Supabase RLS where applicable), and document required operational steps.
 
-Treat a verified, independently reviewable milestone as a Git checkpoint. Before creating dependent worktrees, handing off work, switching Macs, or ending a substantial task: inspect status and diff; ensure secrets and generated local files are excluded; commit only the intended coherent change with a clear, descriptive message; and push the branch. Report the commit SHA, remote branch, verification evidence, and any known follow-up. Never commit or push unverified changes merely for synchronization.
+Treat a verified, independently reviewable milestone as a Git checkpoint. Before creating dependent worktrees, handing off work, switching Macs, or ending a substantial task: inspect status and diff; ensure secrets and generated local files are excluded; commit only the intended coherent change with a clear, descriptive message; then push the branch. Report the commit SHA, remote branch, verification evidence, and any known follow-up. Never commit or push unverified changes merely for synchronization.
+
+A commit is local and reversible, so it is permitted directly. Pushing publishes the work and requires an explicit approval each time: state the verification that was actually run before requesting it, and never request it for work whose checks you have not seen pass. Never rewrite published history, force-push, or discard uncommitted work with a reset or clean.
 
 Build accessible, secure software. For substantial changes, request independent review before declaring completion.

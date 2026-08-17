@@ -18,12 +18,15 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
 | Skills | `opencode/skills/` | On-demand TypeScript, React, frontend design, Supabase, testing, accessibility, security guidance |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
+| Repository checks | `scripts/check.sh`, `.github/workflows/check.yml` | Lint, secret scan, and config-load validation |
+
+`agentctl` subcommands: `doctor` (environment health), `check` (repository health), `sync` / `unsync` (link management), `review-models [--apply]`, `start-task`, `init-existing`, `init-next`.
 
 ## Model routing
 
-All choices live in `opencode/opencode.jsonc`; change that file and run `agentctl sync` to apply a new policy. The installed OpenCode 1.18.18 catalog was inspected on 2026-08-17 and confirmed these OpenCode Go IDs. Account-level availability still requires an OpenCode Go login; use `/models` after connecting to confirm it for that Mac.
+All choices live in `opencode/opencode.jsonc`; change that file and run `agentctl sync` to apply a new policy. Account-level availability requires an OpenCode Go login; `agentctl review-models` verifies the configured IDs against the live catalog, so no model list is pinned to a date here.
 
-Run `agentctl review-models` occasionally (and after an OpenCode Go catalog update). It compares the live catalog with the configured routing, remembers newly seen models locally on that Mac, and prints a planning brief for a deliberate task-specific routing review. After choosing replacements, run `agentctl review-models --apply`; it validates every selection against the live catalog and rewrites routing only after an interactive confirmation.
+Run `agentctl review-models` occasionally (and after an OpenCode Go catalog update). It compares the live catalog with the configured routing, remembers newly seen models locally on that Mac, and prints a planning brief for a deliberate task-specific routing review. After choosing replacements, run `agentctl review-models --apply`; it validates every selection against the live catalog, rewrites routing only after an interactive confirmation, then proves the result loads in OpenCode before replacing the file. The previous config is kept as a timestamped backup, and a candidate that fails to load is rejected with the original untouched.
 
 Scope routing runs automatically before implementation requests through the global guardrails. `/route-task <request>` remains available when you want the same routing decision as a standalone, read-only report before starting work.
 
@@ -39,7 +42,11 @@ The configured defaults centralize normal model routing without limiting the pic
 
 ## OpenCode agents
 
-Planning and review agents are read-only. Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands require approval unless they are low-risk, read-only inspection commands; focused Git commits and pushes are allowed after a verified checkpoint. This makes verified work available for cross-Mac handoff.
+Planning and review agents are read-only, and that is enforced rather than asserted. `edit: deny` alone does not make an agent read-only, because it does not constrain the shell — an allowlisted `sed -i` or `find -exec` would write files and ignore the directory rules entirely. So `explorer`, `architect`, `reviewer`, `security-reviewer`, and `tester` each restate the shell allowlist with no mutating command in it, and deny `git commit` and `git push` explicitly. `agentctl check` asserts this, so the guarantee cannot quietly regress.
+
+Implementers can edit only in the current worktree; outside-worktree access remains approval-gated. Shell commands require approval unless they are read-only inspection commands. `sed` and `find` are deliberately not allowlisted for any agent. A focused commit is allowed directly because it is local and reversible; pushing requires an explicit approval each time, and force-push, `git reset --hard`, and `git clean` are denied outright.
+
+Reading is broadly allowed, but paths that hold credentials — `.env` files, keys, `.ssh`, `auth.json` — require an approval, so no agent pulls a secret into a session transcript in passing.
 
 - `explorer`: read-only architecture/convention investigation.
 - `architect`: read-only decisions and decomposition.
@@ -60,11 +67,14 @@ Review the Brewfile, then run:
 cd /path/to/dev-agent-config
 ./scripts/bootstrap-mac.sh
 agentctl doctor
+agentctl check
 ```
 
-`bootstrap-mac.sh` runs Homebrew Bundle, creates only missing configuration-parent directories, and makes symlinks for the five OpenCode items. If a target already exists and is not already the intended link, `sync-config.sh` first moves it to a timestamped backup beside the target. It does not delete or overwrite it.
+`bootstrap-mac.sh` runs Homebrew Bundle, creates only missing configuration-parent directories, and links seven items: the five OpenCode items into `~/.config/opencode`, `agentctl` into `~/.local/bin`, and the Warp tab config. If a target already exists and is not already the intended link, `sync-config.sh` first moves it to a timestamped backup beside the target. It does not delete or overwrite it. `agentctl unsync` reverses this, removing only links that point into this checkout.
 
-Bootstrap also adds one clearly marked, idempotent line group to `~/.zprofile` which puts `/opt/homebrew/bin` before older `/usr/local/bin` shims and adds `~/.local/bin` (where `agentctl` is linked). Open a new terminal after bootstrap.
+Bootstrap also adds one clearly marked, idempotent line group to `~/.zprofile`. It detects the real Homebrew prefix (`/opt/homebrew` on Apple Silicon, `/usr/local` on Intel), puts it ahead of older shims, and adds `~/.local/bin` — where `agentctl` is linked — under a separate guard, so `agentctl` resolves on either architecture. Open a new terminal after bootstrap.
+
+If several clones of this repository exist on one Mac, the one that last ran `agentctl sync` owns `~/.config/opencode`. `agentctl doctor` verifies each link resolves into the checkout it is run from and fails with the offending path when it does not.
 
 The bundled Brewfile includes pnpm, Supabase CLI, Superset CLI, OpenCode, GitHub CLI, Tailscale, VS Code, and a few small development utilities. It does not run any login or put credentials into this repository.
 
@@ -135,7 +145,8 @@ Use `agentctl sync` after pulling configuration changes. Keep credentials, local
 
 ## Troubleshooting and updates
 
-- `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings.
+- `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings. Required tools (`git`, `node`, `pnpm`, `opencode`, `superset`, `gh`, `jq`) fail; optional ones (`supabase`, `tailscale`, the linters, VS Code, Warp) only warn, since the `tailscale-app` cask may install the app without a CLI.
+- `agentctl check` runs `shellcheck` over the scripts, `gitleaks` over history, and confirms the OpenCode config loads and that the read-only agents still cannot commit or push. The same checks run in CI via `.github/workflows/check.yml`.
 - `agentctl review-models` verifies the live OpenCode Go catalog against routing and flags new or unavailable models; `agentctl review-models --apply` updates chosen routing after confirmation. It stores only a local, non-secret model-name snapshot under `~/.cache/agentctl/`.
 - If OpenCode does not see agents, run `opencode agent list` and check that the relevant path under `~/.config/opencode` is a symlink.
 - If a model is unavailable, use OpenCode `/models` to confirm account availability, then update centralized default routing if needed and run `agentctl sync`.

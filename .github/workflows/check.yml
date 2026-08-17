@@ -1,0 +1,31 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs history to scan it.
+          fetch-depth: 0
+
+      - name: Install shellcheck and gitleaks
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          GITLEAKS_VERSION=8.28.0
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+
+      # OpenCode is not installed here, so the config-load check reports SKIP.
+      # It runs locally via `agentctl check` and inside `review-models --apply`.
+      - name: Run configuration checks
+        run: ./scripts/check.sh

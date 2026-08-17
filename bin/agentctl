@@ -14,7 +14,9 @@ usage() {
   cat <<'EOF'
 Usage:
   agentctl doctor
+  agentctl check
   agentctl sync
+  agentctl unsync
   agentctl review-models [--apply]
   agentctl start-task <task-name> [base-branch]
   agentctl init-existing [path]
@@ -54,7 +56,9 @@ start_task() {
   project_root="$(git rev-parse --show-toplevel)"
   cd "$project_root"
   require_clean_git "create a task worktree"
-  git fetch origin "$base_branch"
+  # A missing base branch must reach the explanatory error below, not abort
+  # here with git's raw fetch failure under `set -e`.
+  git fetch origin "$base_branch" 2>/dev/null || true
   git rev-parse --verify --quiet "refs/remotes/origin/$base_branch" >/dev/null || {
     echo "Base branch is not available on origin: $base_branch. Push it first." >&2
     exit 1
@@ -92,6 +96,23 @@ report before work begins, use: /route-task <request>
 EOF
 }
 
+# Prove a candidate config actually loads before it becomes the real one.
+# OpenCode is its own authority on JSONC syntax and schema, so validate by
+# pointing a throwaway config home at the candidate and listing agents.
+validate_config() {
+  local candidate="$1" probe_home rc=0
+  probe_home="$(mktemp -d)"
+  mkdir -p "$probe_home/opencode"
+  cp "$candidate" "$probe_home/opencode/opencode.jsonc"
+  # Agent prompts are referenced as {file:./agents/...} and must resolve.
+  ln -s "$repo_root/opencode/agents" "$probe_home/opencode/agents"
+  ln -s "$repo_root/opencode/commands" "$probe_home/opencode/commands"
+  ln -s "$repo_root/opencode/skills" "$probe_home/opencode/skills"
+  XDG_CONFIG_HOME="$probe_home" opencode agent list >/dev/null 2>&1 || rc=$?
+  rm -rf "$probe_home"
+  return "$rc"
+}
+
 review_models() {
   local apply=false
   if [[ "${1:-}" == "--apply" ]]; then
@@ -102,14 +123,16 @@ review_models() {
 
   local provider="opencode-go"
   local config_file="$repo_root/opencode/opencode.jsonc"
-  local catalog refreshed_catalog cache_dir cache_file default_model configured_models unavailable_models new_models had_cache=false
+  local catalog cache_dir cache_file default_model configured_models unavailable_models new_models had_cache=false
 
   command -v opencode >/dev/null 2>&1 || {
     echo "OpenCode is required; run agentctl doctor." >&2
     exit 1
   }
 
-  if ! catalog="$(opencode models "$provider" | sed -n "/^$provider\\//p" | sort -u)" || [[ -z "$catalog" ]]; then
+  # --refresh pulls the catalog from models.dev rather than a local cache that
+  # may be stale, so a configured model is never misreported as unavailable.
+  if ! catalog="$(opencode models --refresh "$provider" 2>/dev/null | grep "^$provider/" | sort -u)" || [[ -z "$catalog" ]]; then
     echo "Could not load the $provider model catalog. Connect OpenCode Go, then retry." >&2
     exit 1
   fi
@@ -123,20 +146,6 @@ review_models() {
       unavailable_models+="  - $model\n"
     fi
   done <<<"$configured_models"
-
-  # The provider catalog can briefly be incomplete while OpenCode refreshes it.
-  # Re-query once before reporting a configured model as unavailable.
-  if [[ -n "$unavailable_models" ]]; then
-    refreshed_catalog="$(opencode models "$provider" | sed -n "/^$provider\\//p" | sort -u)"
-    catalog="$(printf '%s\n%s\n' "$catalog" "$refreshed_catalog" | sed '/^$/d' | sort -u)"
-    unavailable_models=""
-    while IFS= read -r model; do
-      [[ -z "$model" ]] && continue
-      if [[ $'\n'"$catalog"$'\n' != *$'\n'"$model"$'\n'* ]]; then
-        unavailable_models+="  - $model\n"
-      fi
-    done <<<"$configured_models"
-  fi
 
   cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/agentctl"
   cache_file="$cache_dir/${provider}-models.txt"
@@ -179,8 +188,8 @@ Supabase/Postgres workflow. Current default: $default_model.
 Current routing models:
 $(printf '%s\n' "$configured_models" | sed 's/^/- /')
 
-Compare current account-available models with the roles explorer, implementation,
-testing, architecture, code review, and security review. Recommend a change only
+Compare current account-available models with the roles explorer, quick fix,
+implementation, testing, architecture, code review, and security review. Recommend a change only
 when it has a clear task-specific advantage. Preserve cost-efficient exploration
 and testing, coding specialization for implementation, and stronger reasoning for
 architecture/review. Return an exact proposed config diff and do not edit files.
@@ -189,11 +198,15 @@ EOF
   [[ "$apply" == true ]] || return 0
   [[ -t 0 ]] || { echo "--apply requires an interactive terminal." >&2; exit 1; }
 
-  local explorer_model implementation_model tester_model review_model selected_model confirmation temp_file role
-  explorer_model="$(sed -n '/"explorer": {/,/^[[:space:]]*}/s/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file")"
-  implementation_model="$(sed -n '/"implementer": {/,/^[[:space:]]*}/s/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file")"
-  tester_model="$(sed -n '/"tester": {/,/^[[:space:]]*}/s/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file")"
-  review_model="$(sed -n '/"architect": {/,/^[[:space:]]*}/s/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file")"
+  local explorer_model quick_fix_model implementation_model tester_model review_model selected_model confirmation temp_file role
+  model_for_role() {
+    sed -n "/\"$1\": {/,/^[[:space:]]*}/s/^[[:space:]]*\"model\": \"\(opencode-go\/[^\"]*\)\".*/\1/p" "$config_file" | head -1
+  }
+  explorer_model="$(model_for_role explorer)"
+  quick_fix_model="$(model_for_role quick-fix)"
+  implementation_model="$(model_for_role implementer)"
+  tester_model="$(model_for_role tester)"
+  review_model="$(model_for_role architect)"
 
   choose_model() {
     local label="$1" current="$2"
@@ -211,6 +224,7 @@ EOF
   echo "Choose only models already available to this account. Press Return to keep each current selection."
   choose_model "Default interactive coding" "$default_model"; default_model="$selected_model"
   choose_model "Explorer (low-cost context gathering)" "$explorer_model"; explorer_model="$selected_model"
+  choose_model "Quick-fix (contained defects)" "$quick_fix_model"; quick_fix_model="$selected_model"
   choose_model "Implementation agents" "$implementation_model"; implementation_model="$selected_model"
   choose_model "Tester" "$tester_model"; tester_model="$selected_model"
   choose_model "Architecture/review/security agents" "$review_model"; review_model="$selected_model"
@@ -220,6 +234,7 @@ EOF
 Proposed routing:
   default: $default_model
   explorer: $explorer_model
+  quick-fix: $quick_fix_model
   implementer, frontend, backend, database: $implementation_model
   tester: $tester_model
   architect, reviewer, security-reviewer: $review_model
@@ -227,26 +242,48 @@ EOF
   read -r -p "Apply this routing to opencode/opencode.jsonc? [y/N] " confirmation
   [[ "$confirmation" =~ ^[Yy]$ ]] || { echo "No changes applied."; return 0; }
 
+  # Rewrite by matching the model line itself and preserving its exact
+  # indentation and trailing comma. Emitting a hardcoded comma, as this
+  # previously did, produces invalid JSONC whenever a "model" line is last in
+  # its block; assuming fixed indent widths breaks on any reformat.
+  # Tracking role by a known-name allowlist rather than by indentation width
+  # keeps this correct regardless of formatting, and stops nested keys such as
+  # "permission" or "bash" from being mistaken for an agent name.
+  local indent comma replacement
   temp_file="$(mktemp "$config_file.XXXXXX")"
   role=""
   while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" =~ ^[[:space:]]{4}\"([a-z-]+)\":\ \{ ]]; then
+    if [[ "$line" =~ ^[[:space:]]*\"(explorer|architect|implementer|quick-fix|frontend|backend|database|tester|reviewer|security-reviewer)\":[[:space:]]*\{ ]]; then
       role="${BASH_REMATCH[1]}"
     fi
-    if [[ "$line" =~ ^[[:space:]]{2}\"model\":\ \"opencode-go/ ]]; then
-      line="  \"model\": \"$default_model\","
-    elif [[ "$line" =~ ^[[:space:]]{6}\"model\":\ \"opencode-go/ ]]; then
+    if [[ "$line" =~ ^([[:space:]]*)\"model\":[[:space:]]*\"opencode-go/[^\"]*\"(,?)[[:space:]]*$ ]]; then
+      indent="${BASH_REMATCH[1]}"
+      comma="${BASH_REMATCH[2]}"
+      replacement=""
       case "$role" in
-        explorer) line="      \"model\": \"$explorer_model\"," ;;
-        implementer|frontend|backend|database) line="      \"model\": \"$implementation_model\"," ;;
-        tester) line="      \"model\": \"$tester_model\"," ;;
-        architect|reviewer|security-reviewer) line="      \"model\": \"$review_model\"," ;;
+        # The top-level default is the only model line seen before any agent.
+        "") replacement="$default_model" ;;
+        explorer) replacement="$explorer_model" ;;
+        quick-fix) replacement="$quick_fix_model" ;;
+        implementer|frontend|backend|database) replacement="$implementation_model" ;;
+        tester) replacement="$tester_model" ;;
+        architect|reviewer|security-reviewer) replacement="$review_model" ;;
       esac
+      [[ -n "$replacement" ]] && line="${indent}\"model\": \"${replacement}\"${comma}"
     fi
     printf '%s\n' "$line" >> "$temp_file"
   done < "$config_file"
+
+  if ! validate_config "$temp_file"; then
+    echo "The rewritten configuration failed to load; the original is untouched." >&2
+    echo "Rejected candidate kept for inspection: $temp_file" >&2
+    exit 1
+  fi
+
+  cp "$config_file" "$config_file.backup.$(date +%Y%m%d-%H%M%S)"
   mv "$temp_file" "$config_file"
-  echo "Updated opencode/opencode.jsonc. Review the diff, then commit and push this configuration checkpoint."
+  echo "Updated opencode/opencode.jsonc (validated with 'opencode agent list')."
+  echo "A timestamped backup is beside it. Review the diff, run 'agentctl sync', then commit this configuration checkpoint."
 }
 
 init_existing() {
@@ -297,7 +334,7 @@ init_next() {
 
   pnpm create next-app "$name" --ts --tailwind --eslint --app --src-dir --import-alias '@/*' --use-pnpm --yes
   cp "$repo_root/templates/new-next-supabase/AGENTS.md" "$name/AGENTS.md"
-  mkdir -p "$name/docs" "$name/.opencode"
+  mkdir -p "$name/docs"
   cp "$repo_root/templates/new-next-supabase/docs/architecture.md" "$name/docs/architecture.md"
   cp "$repo_root/templates/new-next-supabase/superset.config.json.example" "$name/superset.config.json.example"
   cp "$repo_root/templates/new-next-supabase/superset.config.local.json.example" "$name/superset.config.local.json.example"
@@ -314,7 +351,9 @@ init_next() {
 command="${1:-}"
 case "$command" in
   doctor) exec "$repo_root/scripts/doctor.sh" ;;
+  check) exec "$repo_root/scripts/check.sh" ;;
   sync) exec "$repo_root/scripts/sync-config.sh" ;;
+  unsync) exec "$repo_root/scripts/unsync-config.sh" ;;
   review-models) shift; review_models "$@" ;;
   start-task) shift; [[ $# -ge 1 && $# -le 2 ]] || { usage; exit 2; }; start_task "$1" "${2:-}" ;;
   init-existing) shift; init_existing "${1:-.}" ;;
