@@ -30,7 +30,7 @@ All choices live in `opencode/opencode.jsonc`; change that file and run `agentct
 | Substantial coding | implementer, frontend, backend, database | `opencode-go/kimi-k2.7-code` |
 | Architecture, difficult debugging, final/security review | architect, reviewer, security-reviewer | `opencode-go/glm-5.3` |
 
-The global provider whitelist keeps the picker focused. It does not contain credentials. Confirm live availability at any time with OpenCode’s `/models` picker after you authenticate to OpenCode Go.
+The configured defaults centralize normal model routing without limiting the picker. Use OpenCode’s `/models` picker to select any model currently available to your authenticated OpenCode Go account.
 
 ## OpenCode agents
 
@@ -125,7 +125,7 @@ Use `agentctl sync` after pulling configuration changes. Keep credentials, local
 
 - `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings.
 - If OpenCode does not see agents, run `opencode agent list` and check that the relevant path under `~/.config/opencode` is a symlink.
-- If a model is unavailable, use OpenCode `/models`, update the centralized whitelist and routing, then `agentctl sync`.
+- If a model is unavailable, use OpenCode `/models` to confirm account availability, then update centralized default routing if needed and run `agentctl sync`.
 - Superset CLI commands evolve while the product is in beta; update it with Homebrew and consult `superset --help` before relying on a new workflow.
 - To update tools and configuration, pull this repository, review `git diff`, run `./scripts/install-tools.sh`, then `agentctl sync`.
 

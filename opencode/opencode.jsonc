@@ -5,16 +5,6 @@
   // Change model routing only here. All IDs were verified against the local
   // OpenCode Go model catalog on 2026-08-17.
   "model": "opencode-go/gpt-5.6-luna",
-  "provider": {
-    "opencode-go": {
-      "whitelist": [
-        "mimo-v2.5",
-        "gpt-5.6-luna",
-        "kimi-k2.7-code",
-        "glm-5.3"
-      ]
-    }
-  },
 
   // Safe defaults: non-read-only shell activity and external paths require a
   // deliberate approval. Individual agents further restrict this baseline.
