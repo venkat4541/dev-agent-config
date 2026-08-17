@@ -2,6 +2,8 @@
 
 Reusable, non-secret configuration for a Mac development workflow built around OpenCode, Superset worktrees, GitHub, VS Code, Supabase, and Tailscale.
 
+For the complete operating guide, see [WORKFLOWS.md](WORKFLOWS.md).
+
 ## Design
 
 `opencode/` holds the global OpenCode configuration and is linked item-by-item into `~/.config/opencode/`. This deliberately leaves unrelated files already in that directory alone (such as provider packages and credentials). The repository never stores API keys, OAuth tokens, SSH keys, Supabase service-role keys, or `.env` files.
@@ -14,7 +16,7 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Agent registrations and model policy | `opencode/opencode.jsonc` | Centralized routing and permissions |
 | Agent role prompts | `opencode/agents/` | Reusable specialist behavior |
 | Commands | `opencode/commands/` | `/analyze-project`, `/plan-feature`, `/implement-feature`, `/review`, `/verify` |
-| Skills | `opencode/skills/` | On-demand TypeScript, React, Supabase, testing, security guidance |
+| Skills | `opencode/skills/` | On-demand TypeScript, React, frontend design, Supabase, testing, accessibility, security guidance |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
 
 ## Model routing
