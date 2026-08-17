@@ -165,6 +165,99 @@ code .
 
 Run focused verification, then production build verification before merge. Keep the independent reviewer separate from the implementation pass for substantial changes.
 
+## Example: start a new feature and assign agents
+
+This is the normal sequence for a feature in an already configured project. Start with one task worktree; create additional worktrees only after planning proves that code changes can be independently merged.
+
+### 1. Prepare a clean, pushed base
+
+```bash
+cd /absolute/path/to/project
+git fetch origin
+git switch <base-branch>
+git pull --ff-only
+git status --short
+```
+
+Resolve any output from `git status --short` before continuing. The base branch must be pushed because Superset worktrees are created from remote history.
+
+### 2. Create the feature worktree
+
+```bash
+superset ws create --local \
+  --project <project-id> \
+  --name account-notifications \
+  --branch feat/account-notifications \
+  --base-branch <base-branch>
+```
+
+Open the returned worktree path in OpenCode and VS Code:
+
+```bash
+cd <Superset-worktree-path>
+opencode .
+code .
+```
+
+### 3. Explore and plan before editing
+
+In OpenCode, run:
+
+```text
+/analyze-project Add account notification preferences, including email delivery controls.
+/plan-feature Add account notification preferences, including email delivery controls.
+```
+
+Those commands assign the read-only `explorer` and `architect` agents. Review the plan before implementation. It should identify the existing data/API/UI conventions, authorization and RLS impact, tests, rollout concerns, and whether any work is truly independent.
+
+### 4. Assign implementation specialists deliberately
+
+For most features, keep all work in this single worktree and tell the primary OpenCode session:
+
+```text
+Implement the approved notification-preferences plan. Use the database agent for any
+schema, migration, query, or RLS change; use backend for server/API boundaries; use
+frontend for the React UI and interaction states; and use tester for relevant tests.
+Keep the work focused and preserve the existing architecture. Do not create additional
+worktrees unless the plan identifies independent, non-overlapping mergeable units.
+```
+
+Role selection is based on affected boundaries, not a fixed pipeline:
+
+| Need | Agent |
+| --- | --- |
+| Repository investigation only | `explorer` |
+| Difficult tradeoffs or feature decomposition | `architect` |
+| General focused implementation | `implementer` |
+| React/Next.js/UI/accessibility work | `frontend` |
+| Server actions, APIs, integrations, Node work | `backend` |
+| Supabase/Postgres migrations, queries, RLS | `database` |
+| Unit, integration, E2E tests and verification | `tester` |
+| Independent correctness/maintainability review | `reviewer` |
+| Auth, authorization, RLS, secrets, input-boundary review | `security-reviewer` |
+
+### 5. Parallelize only independent work
+
+For example, after architecture defines stable API/type contracts, a database migration/RLS change and a UI component change may be independently mergeable. Create one worktree per resulting branch, give each clear file ownership, and merge in the dependency order from the plan. Do not parallelize agents that will modify the same schema, shared types, routes, or UI primitives.
+
+### 6. Verify, review, checkpoint, and merge
+
+In the task worktree, run:
+
+```text
+/verify account notification preferences
+/review account notification preferences
+```
+
+For a feature that touches authentication, authorization, RLS, secrets, or sensitive data, also ask for an independent security review:
+
+```text
+Use the security-reviewer agent to review this feature's auth, authorization, RLS,
+server/client boundaries, secrets handling, and input validation. Do not edit code.
+```
+
+After the project’s relevant typecheck, lint, tests, and production build pass, inspect the diff, commit with a clear message, and push the feature branch. Record the commit SHA, checks run, remaining risks, and next action in the handoff or pull request.
+
 ## New project workflow
 
 ### 1. Create the initial project
