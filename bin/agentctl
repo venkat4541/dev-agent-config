@@ -23,8 +23,9 @@ EOF
 }
 
 require_clean_git() {
+  local action="${1:-continue}"
   if [[ -n "$(git status --porcelain)" ]]; then
-    echo "Refusing to initialize a dirty repository. Commit, stash, or review changes first." >&2
+    echo "Refusing to $action in a dirty repository. Commit, stash, or review changes first." >&2
     exit 1
   fi
 }
@@ -39,7 +40,7 @@ detect_package_manager() {
 }
 
 start_task() {
-  local task_name="${1:-}" base_branch="${2:-}" project_root current_branch projects_json project_id
+  local task_name="${1:-}" base_branch="${2:-main}" project_root projects_json project_id
   local branch_name
 
   [[ -n "$task_name" && "$task_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
@@ -52,11 +53,7 @@ start_task() {
 
   project_root="$(git rev-parse --show-toplevel)"
   cd "$project_root"
-  require_clean_git
-  current_branch="$(git branch --show-current)"
-  [[ -n "$current_branch" ]] || { echo "Cannot create a task from a detached HEAD." >&2; exit 1; }
-  base_branch="${base_branch:-$current_branch}"
-
+  require_clean_git "create a task worktree"
   git fetch origin "$base_branch"
   git rev-parse --verify --quiet "refs/remotes/origin/$base_branch" >/dev/null || {
     echo "Base branch is not available on origin: $base_branch. Push it first." >&2
@@ -261,7 +258,7 @@ init_existing() {
     exit 1
   fi
   cd "$(git rev-parse --show-toplevel)"
-  require_clean_git
+  require_clean_git "initialize"
 
   local manager
   manager="$(detect_package_manager)"
@@ -319,7 +316,7 @@ case "$command" in
   doctor) exec "$repo_root/scripts/doctor.sh" ;;
   sync) exec "$repo_root/scripts/sync-config.sh" ;;
   review-models) shift; review_models "$@" ;;
-  start-task) shift; start_task "${1:-}" "${2:-}" ;;
+  start-task) shift; [[ $# -ge 1 && $# -le 2 ]] || { usage; exit 2; }; start_task "$1" "${2:-}" ;;
   init-existing) shift; init_existing "${1:-.}" ;;
   init-next) shift; init_next "${1:-}" ;;
   *) usage; exit 2 ;;

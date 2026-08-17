@@ -116,7 +116,7 @@ Superset workspaces are isolated Git worktrees. Use this rule:
 
 It is not a mapping of worktrees to agent roles. An explorer and reviewer can investigate the same worktree read-only; parallel implementation needs separate branches/worktrees with clear file ownership.
 
-For daily use, run `agentctl start-task <task-name>` from a clean project checkout. It detects the registered local Superset project, verifies the current branch is pushed to `origin`, and creates `feat/<task-name>` from that branch. Pass a second argument only when you intentionally want a different pushed base branch.
+For daily use, run `agentctl start-task <task-name>` from a clean project checkout. It detects the registered local Superset project, verifies `origin/main`, and creates `feat/<task-name>` from `main`. Pass a second argument only when you intentionally want a different pushed base branch.
 
 For a pnpm Next.js project, `templates/new-next-supabase/superset.config.json.example` shows the sensible `pnpm install` / `pnpm dev` default. Review the package manager, environment files, services, ports, and monorepo cwd for each real repository before moving that example to `.superset/config.json`. Keep machine-local additions in ignored `.superset/config.local.json`; arrange any environment copying locally rather than committing secrets. Validate each project config by creating a throwaway Superset workspace before relying on it.
 

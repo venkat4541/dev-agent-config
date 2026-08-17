@@ -146,13 +146,13 @@ superset projects list --local --json
 
 ### 6. Create a task worktree
 
-For normal feature work, start from a clean checkout of the desired already-pushed base branch and run:
+For normal feature work, start from any clean project checkout and run:
 
 ```bash
 agentctl start-task concise-task-name
 ```
 
-The command detects the local Superset project by repository path, verifies the base branch exists on `origin`, and creates `feat/concise-task-name`. Use `agentctl start-task concise-task-name other-pushed-branch` only when deliberately branching from a different base. If the repository has not yet been registered on this Mac, the command registers it before creating the task worktree. Superset worktrees are based on remote branch history, so commit and push shared project setup before using it as a worktree base.
+The command detects the local Superset project by repository path, fetches and verifies `origin/main`, and creates `feat/concise-task-name` from `main`. Pass `agentctl start-task concise-task-name other-pushed-branch` only when deliberately using a different base. If the repository has not yet been registered on this Mac, the command registers it before creating the task worktree. Superset worktrees are based on remote branch history, so commit and push shared project setup to `main` before using it as a worktree base.
 
 Inside the new worktree:
 
@@ -172,13 +172,11 @@ This is the normal sequence for a feature in an already configured project. Star
 
 ```bash
 cd /absolute/path/to/project
-git fetch origin
-git switch <base-branch>
-git pull --ff-only
+git fetch origin main
 git status --short
 ```
 
-Resolve any output from `git status --short` before continuing. The base branch must be pushed because Superset worktrees are created from remote history.
+Resolve any output from `git status --short` before continuing. Task worktrees default to pushed `main`; specify another pushed branch only when the task deliberately depends on it.
 
 ### 2. Create the feature worktree
 
@@ -303,7 +301,7 @@ Review `superset.config.json.example`, adapt it to the project, commit it, regis
 
 ## Working in a task worktree
 
-1. Start from a clean, pushed base branch.
+1. Start from any clean checkout; task worktrees default to pushed `main`.
 2. Create one Superset worktree for one mergeable task.
 3. Run OpenCode inside that worktree.
 4. Explore and plan before complex changes.
@@ -346,10 +344,10 @@ On this Mac, `ai-central` is registered with Superset as:
 
 ```text
 projectId: baf869bd-ad04-49ca-ab8d-a38bb031f819
-base branch: agent/publish-local-changes
+base branch: main
 ```
 
-Create a worktree from the current pushed branch with:
+Create a worktree from pushed `main` with:
 
 ```bash
 cd /Users/venkat/projects/ai-central
