@@ -10,12 +10,10 @@ Before acting on an implementation request, classify its scope and select the le
 
 Verify changes with the project’s relevant typecheck, lint, tests, and production build. Make database changes through reviewed migrations, maintain least-privilege authorization (including Supabase RLS where applicable), and document required operational steps.
 
-Treat a verified, independently reviewable milestone as a Git checkpoint. Before creating dependent worktrees, handing off work, switching Macs, or ending a substantial task: inspect status and diff; ensure secrets and generated local files are excluded; commit only the intended coherent change with a clear, descriptive message; then push the branch. Report the commit SHA, remote branch, verification evidence, and any known follow-up. Never commit or push unverified changes merely for synchronization.
-
-A commit is local and reversible, so it is permitted directly. Pushing publishes the work and requires an explicit approval each time: state the verification that was actually run before requesting it, and never request it for work whose checks you have not seen pass. Never rewrite published history, force-push, or discard uncommitted work with a reset or clean.
+Treat a verified, independently reviewable milestone as a Git checkpoint: inspect status and diff, exclude secrets and generated files, then commit only the intended coherent change. A commit is local and reversible and may be made directly; pushing needs an explicit approval each time, stating the verification you actually ran. Report the commit SHA, remote branch, and verification evidence. Never rewrite published history, force-push, `git reset --hard`, or `git clean`. The full procedure is in the `git-workflow` skill.
 
 Build accessible, secure software. For substantial changes, request independent review before declaring completion.
 
-## Synara model routing
+## Workflow-specific configuration
 
-The Synara stack runs one objective per task + worktree, Plan → Build → Verify, and never reuses the Build thread for Verify. Codex roles select a profile: `-p plan` (`gpt-6-astra`/high), `-p explore` (`gpt-5.6-luna`/high), `-p verify` (`gpt-5.6-terra`/medium), `-p review` (`codex-auto-review`/high). Build runs on OpenCode Go (`deepseek-v4.1-flash`; heavy work `deepseek-v4-pro` or `qwen3.8-max`; review fallback `kimi-k2.7-code`). The default Codex model with no profile is Plan-tier `gpt-6-astra`/high, so always pass `-p verify` for Verify tasks and `-p review` for review tasks, or flagship reasoning is burned on tests. Grok is retired; use `-p explore` for a second angle.
+Synara orchestration (one objective per task and worktree; Plan → Build → Verify, never reusing the Build thread for Verify) and its per-role model routing are documented in `docs/synara-workflow.md`. The default Codex model is Plan-tier, so always pass `-p verify` for Verify and `-p review` for Review.

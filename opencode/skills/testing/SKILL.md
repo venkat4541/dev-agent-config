@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Decide what to test and at which level, then write tests that would actually catch a regression — use when adding coverage for a change, when a test is flaky or slow, or when deciding whether a behaviour needs a unit, integration, or end-to-end test.
+description: Decide what to test and at which level, then write tests that would actually catch a regression — use when adding coverage, when a test is flaky or slow, or when choosing between unit, integration, and end-to-end level.
 ---
 
 Discover the project's package scripts, test runner, and existing conventions first, and follow them. A test that does not match local fixture and helper patterns is a maintenance cost even when it passes.

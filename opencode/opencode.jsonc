@@ -35,7 +35,21 @@
     "grep": "allow",
     "list": "allow",
     "lsp": "allow",
-    "skill": "allow",
+
+    // `~/.agents/skills` is loaded for Codex but OpenCode also scans it, so a
+    // few plugin skills duplicate richer repo skills and their descriptions
+    // would cost always-on context and compete for selection. Deny the
+    // duplicates here — this hides them from OpenCode only, leaves them intact
+    // for Codex, and never touches the plugin's managed files. A name collision
+    // (`grill-me`) is deliberately not listed: denying by name would hide the
+    // repo skill too.
+    "skill": {
+      "*": "allow",
+      "tdd": "deny",
+      "grilling": "deny",
+      "grill-with-docs": "deny",
+      "diagnosing-bugs": "deny"
+    },
     "edit": "ask",
 
     // Read-only inspection only. `sed` and `find` are deliberately absent:

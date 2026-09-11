@@ -104,6 +104,16 @@ else
   pass "All $(find opencode/skills -name SKILL.md | wc -l | tr -d ' ') skills have a matching name and a description"
 fi
 
+# AGENTS.md is injected into every session in every project, so its size is a
+# recurring token cost. Fail if it regrows past the budget rather than letting
+# always-on context creep back in unnoticed.
+agents_chars="$(wc -c < opencode/AGENTS.md | tr -d ' ')"
+if [[ "$agents_chars" -le 2600 ]]; then
+  pass "AGENTS.md is within the always-on budget ($agents_chars <= 2600 chars)"
+else
+  fail "AGENTS.md exceeds the always-on budget ($agents_chars > 2600 chars); move workflow-specific detail into a skill or docs/"
+fi
+
 # Every agent registration must point at a prompt file that exists.
 while IFS= read -r prompt_ref; do
   prompt_file="opencode/${prompt_ref#./}"
