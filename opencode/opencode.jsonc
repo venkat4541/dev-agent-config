@@ -2,9 +2,13 @@
   "$schema": "https://opencode.ai/config.json",
   "share": "manual",
 
+  // Enable built-in LSP servers for diagnostics feedback (off by default in opencode).
+  "lsp": true,
+
   // Change model routing only here, then run `agentctl sync`.
   // `agentctl review-models` validates these IDs against the live catalog.
-  "model": "opencode-go/kimi-k2.7-code",
+  // Build defaults to deepseek-v4.1-flash to match the Synara Build role.
+  "model": "opencode-go/deepseek-v4.1-flash",
 
   // Baseline for every agent. Agents below tighten this; none may loosen it.
   "permission": {
@@ -130,7 +134,7 @@
     "implementer": {
       "description": "Focused production implementation",
       "mode": "all",
-      "model": "opencode-go/kimi-k2.7-code",
+      "model": "opencode-go/deepseek-v4.1-flash",
       "prompt": "{file:./agents/implementer.md}",
       "permission": { "edit": "allow", "external_directory": "ask" }
     },
@@ -144,21 +148,21 @@
     "frontend": {
       "description": "UI, React, Next.js, accessibility, and client boundaries",
       "mode": "all",
-      "model": "opencode-go/kimi-k2.7-code",
+      "model": "opencode-go/deepseek-v4.1-flash",
       "prompt": "{file:./agents/frontend.md}",
       "permission": { "edit": "allow", "external_directory": "ask" }
     },
     "backend": {
       "description": "Server, API, Node.js, and integration implementation",
       "mode": "all",
-      "model": "opencode-go/kimi-k2.7-code",
+      "model": "opencode-go/deepseek-v4.1-flash",
       "prompt": "{file:./agents/backend.md}",
       "permission": { "edit": "allow", "external_directory": "ask" }
     },
     "database": {
       "description": "Postgres, Supabase migrations, RLS, and data access",
       "mode": "all",
-      "model": "opencode-go/kimi-k2.7-code",
+      "model": "opencode-go/deepseek-v4.1-flash",
       "prompt": "{file:./agents/database.md}",
       "permission": { "edit": "allow", "external_directory": "ask" }
     },
