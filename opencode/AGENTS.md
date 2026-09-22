@@ -13,7 +13,3 @@ Verify changes with the project’s relevant typecheck, lint, tests, and product
 Treat a verified, independently reviewable milestone as a Git checkpoint: inspect status and diff, exclude secrets and generated files, then commit only the intended coherent change. A commit is local and reversible and may be made directly; pushing needs an explicit approval each time, stating the verification you actually ran. Report the commit SHA, remote branch, and verification evidence. Never rewrite published history, force-push, `git reset --hard`, or `git clean`. The full procedure is in the `git-workflow` skill.
 
 Build accessible, secure software. For substantial changes, request independent review before declaring completion.
-
-## Workflow-specific configuration
-
-Synara orchestration (one objective per task and worktree; Plan → Build → Verify, never reusing the Build thread for Verify) and its per-role model routing are documented in `docs/synara-workflow.md`. The default Codex model is Plan-tier, so always pass `-p verify` for Verify and `-p review` for Review.

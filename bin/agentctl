@@ -153,24 +153,41 @@ review_models() {
   fi
   [[ $# -eq 0 ]] || { usage; exit 2; }
 
-  local provider="opencode-go"
   local config_file="$repo_root/opencode/opencode.jsonc"
-  local catalog cache_dir cache_file default_model configured_models unavailable_models new_models had_cache=false
+  local provider raw catalog cache_dir cache_file default_model configured_models unavailable_models new_models had_cache=false
 
   command -v opencode >/dev/null 2>&1 || {
     echo "OpenCode is required; run agentctl doctor." >&2
     exit 1
   }
 
-  # --refresh pulls the catalog from models.dev rather than a local cache that
-  # may be stale, so a configured model is never misreported as unavailable.
-  if ! catalog="$(opencode models --refresh "$provider" 2>/dev/null | grep "^$provider/" | sort -u)" || [[ -z "$catalog" ]]; then
-    echo "Could not load the $provider model catalog. Connect OpenCode Go, then retry." >&2
+  # Model IDs are "<provider>/<model>". Derive the provider from the configured
+  # default so switching providers needs no edit to this script.
+  default_model="$(sed -n 's|^[[:space:]]*"model": "\([^/"]*/[^"]*\)".*|\1|p' "$config_file" | head -1)"
+  [[ -n "$default_model" ]] || {
+    echo "No default \"model\" entry found in $config_file." >&2
+    exit 1
+  }
+  provider="${default_model%%/*}"
+
+  # `opencode models` changed shape across versions. V1 takes a provider and
+  # --refresh (pulling the catalog from models.dev rather than a local cache
+  # that may be stale); v2 dropped both and prints every provider's models.
+  # Try the v1 form first, fall back to the v2 form, and filter either to the
+  # configured provider.
+  catalog=""
+  if raw="$(opencode models --refresh "$provider" 2>/dev/null)"; then
+    catalog="$(printf '%s\n' "$raw" | grep "^$provider/" | sort -u || true)"
+  fi
+  if [[ -z "$catalog" ]] && raw="$(opencode models 2>/dev/null)"; then
+    catalog="$(printf '%s\n' "$raw" | grep "^$provider/" | sort -u || true)"
+  fi
+  if [[ -z "$catalog" ]]; then
+    echo "Could not load the $provider model catalog. Connect the $provider provider, then retry." >&2
     exit 1
   fi
 
-  default_model="$(sed -n 's/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file" | head -1)"
-  configured_models="$(sed -n 's/^[[:space:]]*"model": "\(opencode-go\/[^\"]*\)".*/\1/p' "$config_file" | sort -u)"
+  configured_models="$(sed -n 's|^[[:space:]]*"model": "\([^/"]*/[^"]*\)".*|\1|p' "$config_file" | sort -u)"
   unavailable_models=""
   while IFS= read -r model; do
     [[ -z "$model" ]] && continue
@@ -190,7 +207,7 @@ review_models() {
   fi
   printf '%s\n' "$catalog" | sort -u > "$cache_file"
 
-  echo "OpenCode Go model review"
+  echo "$provider model review"
   echo "Catalog: $(printf '%s\n' "$catalog" | wc -l | tr -d ' ') models"
   echo "Configured default: ${default_model:-not found}"
   echo "Configured routing models:"
@@ -215,7 +232,7 @@ review_models() {
   cat <<EOF
 
 Suggested review brief (copy into an OpenCode planning session):
-Review the OpenCode Go routing for a TypeScript, React, Next.js, Node.js,
+Review the $provider routing for a TypeScript, React, Next.js, Node.js,
 Supabase/Postgres workflow. Current default: $default_model.
 Current routing models:
 $(printf '%s\n' "$configured_models" | sed 's/^/- /')
@@ -232,7 +249,7 @@ EOF
 
   local explorer_model quick_fix_model implementation_model tester_model review_model selected_model confirmation temp_file role
   model_for_role() {
-    sed -n "/\"$1\": {/,/^[[:space:]]*}/s/^[[:space:]]*\"model\": \"\(opencode-go\/[^\"]*\)\".*/\1/p" "$config_file" | head -1
+    sed -n "/\"$1\": {/,/^[[:space:]]*}/s|^[[:space:]]*\"model\": \"\([^/\"]*/[^\"]*\)\".*|\1|p" "$config_file" | head -1
   }
   explorer_model="$(model_for_role explorer)"
   quick_fix_model="$(model_for_role quick-fix)"
@@ -288,7 +305,7 @@ EOF
     if [[ "$line" =~ ^[[:space:]]*\"(explorer|architect|implementer|quick-fix|frontend|backend|database|tester|reviewer|security-reviewer)\":[[:space:]]*\{ ]]; then
       role="${BASH_REMATCH[1]}"
     fi
-    if [[ "$line" =~ ^([[:space:]]*)\"model\":[[:space:]]*\"opencode-go/[^\"]*\"(,?)[[:space:]]*$ ]]; then
+    if [[ "$line" =~ ^([[:space:]]*)\"model\":[[:space:]]*\"[^\"/]*/[^\"]*\"(,?)[[:space:]]*$ ]]; then
       indent="${BASH_REMATCH[1]}"
       comma="${BASH_REMATCH[2]}"
       replacement=""

@@ -113,7 +113,7 @@ fi
 if command -v opencode >/dev/null 2>&1; then
   provider_status="$(opencode providers list 2>/dev/null || true)"
   if grep -Fq "0 credentials" <<<"$provider_status"; then
-    warn "OpenCode has no connected provider; open OpenCode and use /connect → OpenCode Go"
+    warn "OpenCode has no connected provider; open OpenCode and use /connect to authenticate a provider"
   elif [[ -n "$provider_status" ]]; then
     pass "OpenCode has at least one connected provider"
   else
