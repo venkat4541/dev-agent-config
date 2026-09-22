@@ -29,7 +29,7 @@ commands = ["while true; do clear; printf 'OpenCode usage (refreshes every 60s)\
 id = "workspaces"
 type = "terminal"
 directory = "{{project}}"
-commands = ["while true; do clear; printf 'Superset workspaces (refreshes every 30s)\\nOpen the Superset app for live agent terminals.\\n\\n'; superset workspaces list --local; sleep 30; done"]
+commands = ["while true; do clear; printf 'Orca worktrees (refreshes every 30s)\\nOpen the Orca app for live agent terminals.\\n\\n'; orca worktree ps; sleep 30; done"]
 
 [params.project]
 type = "repo"

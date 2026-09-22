@@ -1,6 +1,8 @@
 # Re-run safely with: brew bundle --file Brewfile
 tap "supabase/tap"
-tap "superset-sh/tap"
+
+# Orca is installed from its own distribution, not Homebrew: the `orca` cask
+# is an unrelated plotly image tool. Install the Orca app separately.
 
 brew "bun"
 brew "gh"
@@ -12,7 +14,6 @@ brew "pnpm"
 brew "ripgrep"
 brew "shellcheck"
 brew "supabase/tap/supabase"
-brew "superset-sh/tap/superset"
 
 cask "tailscale-app"
 cask "visual-studio-code"

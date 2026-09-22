@@ -42,14 +42,13 @@ detect_package_manager() {
 }
 
 start_task() {
-  local task_name="${1:-}" base_branch="${2:-main}" project_root projects_json project_id
-  local branch_name
+  local task_name="${1:-}" base_branch="${2:-main}" project_root repos_json repo_id created worktree_path worktree_branch base_ref
 
   [[ -n "$task_name" && "$task_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
     echo "Provide a lowercase kebab-case task name, for example: account-notifications." >&2
     exit 1
   }
-  command -v superset >/dev/null 2>&1 || { echo "Superset is required; run agentctl doctor." >&2; exit 1; }
+  command -v orca >/dev/null 2>&1 || { echo "Orca is required; run agentctl doctor." >&2; exit 1; }
   command -v jq >/dev/null 2>&1 || { echo "jq is required; run ./scripts/install-tools.sh." >&2; exit 1; }
   git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Run this inside a Git repository." >&2; exit 1; }
 
@@ -64,32 +63,54 @@ start_task() {
     exit 1
   }
 
-  projects_json="$(superset projects list --local --json)"
-  project_id="$(jq -r --arg path "$project_root" '.[] | select(.path == $path) | .id' <<<"$projects_json" | head -1)"
-  if [[ -z "$project_id" || "$project_id" == "null" ]]; then
-    echo "Registering this repository with Superset on this Mac..."
-    superset projects create --local --name "$(basename "$project_root")" --import "$project_root" >/dev/null
-    projects_json="$(superset projects list --local --json)"
-    project_id="$(jq -r --arg path "$project_root" '.[] | select(.path == $path) | .id' <<<"$projects_json" | head -1)"
+  # Orca creates worktrees from a repo it has registered. Register this
+  # checkout on first use, then read the repo id back from the list rather
+  # than parsing the add output.
+  repos_json="$(orca repo list --json)"
+  repo_id="$(jq -r --arg path "$project_root" '.result.repos[] | select(.path == $path) | .id' <<<"$repos_json" | head -1)"
+  if [[ -z "$repo_id" || "$repo_id" == "null" ]]; then
+    echo "Registering this repository with Orca..."
+    orca repo add --path "$project_root" --json >/dev/null
+    repos_json="$(orca repo list --json)"
+    repo_id="$(jq -r --arg path "$project_root" '.result.repos[] | select(.path == $path) | .id' <<<"$repos_json" | head -1)"
   fi
-  [[ -n "$project_id" && "$project_id" != "null" ]] || {
-    echo "Superset project registration could not be verified." >&2
+  [[ -n "$repo_id" && "$repo_id" != "null" ]] || {
+    echo "Orca repo registration could not be verified for $project_root." >&2
     exit 1
   }
 
-  branch_name="feat/$task_name"
-  echo "Creating Superset task worktree: $branch_name (base: $base_branch)"
-  superset ws create --local \
-    --project "$project_id" \
+  # Orca persists its base ref as a remote ref (for example origin/main).
+  base_ref="$base_branch"
+  [[ "$base_ref" == origin/* ]] || base_ref="origin/$base_ref"
+
+  echo "Creating Orca worktree: $task_name (base: $base_ref)"
+  created="$(orca worktree create \
+    --repo "id:$repo_id" \
     --name "$task_name" \
-    --branch "$branch_name" \
-    --base-branch "$base_branch" \
-    --skip-branch-prefix
+    --base-branch "$base_ref" \
+    --no-parent \
+    --json)"
+
+  worktree_path="$(jq -r '.result.worktree.path // .result.path // .result.worktreePath // empty' <<<"$created")"
+  worktree_branch="$(jq -r '.result.worktree.branch // empty' <<<"$created")"
+  if [[ -z "$worktree_path" ]]; then
+    # Fall back to the worktree list if the create payload shape differs.
+    worktree_path="$(orca worktree list --json | jq -r --arg name "$task_name" '.result.worktrees[] | select(.displayName == $name) | .path' | head -1)"
+    [[ -n "$worktree_branch" ]] || worktree_branch="$(orca worktree list --json | jq -r --arg name "$task_name" '.result.worktrees[] | select(.displayName == $name) | .branch' | head -1)"
+  fi
+  [[ -n "$worktree_path" ]] || {
+    echo "Orca created the worktree but no path could be read from its output:" >&2
+    printf '%s\n' "$created" >&2
+    exit 1
+  }
 
   cat <<EOF
 
-Next: open the worktree path shown above, then run:
-  opencode .
+Created Orca worktree: $worktree_path${worktree_branch:+
+Branch: ${worktree_branch#refs/heads/}}
+
+Open it from the Orca app, or work in it directly:
+  cd "$worktree_path" && opencode .
 
 Implementation requests are automatically scope-routed. For a visible routing
 report before work begins, use: /route-task <request>
@@ -385,8 +406,6 @@ init_next() {
   cp "$repo_root/templates/new-next-supabase/AGENTS.md" "$name/AGENTS.md"
   mkdir -p "$name/docs"
   cp "$repo_root/templates/new-next-supabase/docs/architecture.md" "$name/docs/architecture.md"
-  cp "$repo_root/templates/new-next-supabase/superset.config.json.example" "$name/superset.config.json.example"
-  cp "$repo_root/templates/new-next-supabase/superset.config.local.json.example" "$name/superset.config.local.json.example"
 
   if command -v supabase >/dev/null 2>&1; then
     (cd "$name" && supabase init)
@@ -394,7 +413,7 @@ init_next() {
     echo "Supabase CLI unavailable; run agentctl doctor, then run 'supabase init' inside $name."
   fi
   echo "Created $name without secrets. Complete docs/architecture.md before substantial implementation."
-  echo "Review superset.config.json.example, then move it to .superset/config.json only after adapting setup/run and environment handling to this project."
+  echo "In the Orca app, register this repo and set its setup hook to 'pnpm install' before creating worktrees."
 }
 
 command="${1:-}"

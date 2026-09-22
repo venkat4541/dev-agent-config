@@ -9,7 +9,7 @@
 *.backup.*
 *.bak
 
-# Machine-specific notes: registered Superset project IDs, local absolute paths,
+# Machine-specific notes: registered Orca repo ids, local absolute paths, and
 # per-Mac quirks. Keeps host-specific detail out of a repo meant to be shared.
 NOTES.local.md
 
