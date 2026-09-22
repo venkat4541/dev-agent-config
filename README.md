@@ -25,7 +25,7 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 
 ## Agent harness
 
-Orca is the runtime that launches and supervises agent sessions: worktrees, terminals, orchestration, skills, and Linear ticket flow. OpenCode still defines agent behavior. CLI resolution, worktrees, orchestration, and the ticket flow are documented in [docs/orca-workflow.md](docs/orca-workflow.md).
+Orca is the runtime that launches and supervises agent sessions: worktrees, terminals, orchestration, skills, and Linear ticket flow. OpenCode still defines agent behavior. CLI resolution, worktrees, orchestration, and the ticket flow are documented in [docs/orca-workflow.md](docs/orca-workflow.md). Running one always-on Orca runtime on a miniPC VM and pairing the macOS and mobile apps to it is documented in [docs/orca-remote-vm.md](docs/orca-remote-vm.md).
 
 ## Model routing
 
