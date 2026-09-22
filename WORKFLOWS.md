@@ -72,7 +72,7 @@ Run `agentctl sync` from the checkout you intend to be authoritative. If more th
 
 `agentctl check` lints the shell scripts, scans history for secrets, and confirms the OpenCode config loads. Run it before committing a configuration change. `agentctl unsync` removes only the links that point into this checkout and lists the backups available to restore.
 
-Run `agentctl review-models` whenever OpenCode Go releases models, or monthly if you actively use several model roles. Use its generated brief in an OpenCode planning session, then run `agentctl review-models --apply` to select and confirm a validated routing update. Review, commit, and push that configuration checkpoint.
+Run `agentctl review-models` whenever your provider releases models, or monthly if you actively use several model roles. Use its generated brief in an OpenCode planning session, then run `agentctl review-models --apply` to select and confirm a validated routing update. Review, commit, and push that configuration checkpoint.
 
 ## Existing project workflow
 
