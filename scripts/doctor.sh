@@ -37,7 +37,7 @@ check_required_tool git
 check_required_tool node
 check_required_tool pnpm
 check_required_tool opencode
-check_required_tool superset
+check_required_tool orca
 check_required_tool gh
 # jq is a hard dependency of `agentctl start-task`.
 check_required_tool jq
@@ -121,11 +121,11 @@ if command -v opencode >/dev/null 2>&1; then
   fi
 fi
 
-if command -v superset >/dev/null 2>&1; then
-  if superset auth whoami >/dev/null 2>&1; then
-    pass "Superset authentication is active"
+if command -v orca >/dev/null 2>&1; then
+  if orca status >/dev/null 2>&1; then
+    pass "Orca runtime is reachable"
   else
-    warn "Superset is not authenticated; run 'superset auth login'"
+    warn "Orca runtime is not reachable; open the Orca app or start 'orca serve'"
   fi
 fi
 

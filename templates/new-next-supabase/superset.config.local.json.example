@@ -1,7 +1,0 @@
-{
-  "before": [
-    "# Add machine-local, non-secret preparation here. Do not commit this file."
-  ],
-  "after": []
-}
-
