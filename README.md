@@ -18,9 +18,14 @@ Global rules are intentionally framework-neutral. A project-local `AGENTS.md`, p
 | Commands | `opencode/commands/` | `/route-task`, `/analyze-project`, `/plan-feature`, `/grill`, `/implement-feature`, `/review`, `/verify`, `/drive-todos` |
 | Skills | `opencode/skills/` | On-demand procedures for the stack and workflow (see below) |
 | Project templates | `templates/` | Existing-project onboarding and a Next/Supabase starting point |
+| Agent harness | `docs/orca-workflow.md` | Orca runtime: worktrees, terminals, orchestration, Linear |
 | Repository checks | `scripts/check.sh`, `.github/workflows/check.yml` | Lint, secret scan, and config-load validation |
 
 `agentctl` subcommands: `doctor` (environment health), `check` (repository health), `sync` / `unsync` (link management), `review-models [--apply]`, `start-task`, `init-existing`, `init-next`.
+
+## Agent harness
+
+Orca is the runtime that launches and supervises agent sessions: worktrees, terminals, orchestration, skills, and Linear ticket flow. OpenCode still defines agent behavior. CLI resolution, worktrees, orchestration, and the ticket flow are documented in [docs/orca-workflow.md](docs/orca-workflow.md).
 
 ## Model routing
 
