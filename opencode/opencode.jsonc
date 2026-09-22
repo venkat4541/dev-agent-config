@@ -5,6 +5,36 @@
   // Enable built-in LSP servers for diagnostics feedback (off by default in opencode).
   "lsp": true,
 
+  // Cua Driver: background desktop control (clicks/types in native macOS apps
+  // without stealing focus). The binary lives in the installed CuaDriver.app
+  // bundle and the ~/.local/bin wrapper proxies to it; macOS grants
+  // Accessibility + Screen Recording to that bundle, not to this config.
+  // Privilege note: opencode's `permission` rules do not gate MCP tools, so
+  // every server below runs promptless. cua-driver can act on the desktop;
+  // `typesafe` only sends a payload to the TypeSafe API and returns typed
+  // decisions. Because neither is part of the permission model, Jev output is
+  // advice — never the sole gate for commit, push, auth, migrations, or review.
+  "mcp": {
+    "cua-driver": {
+      "type": "local",
+      "command": ["/Users/venkat/.local/bin/cua-driver", "mcp"],
+      "enabled": true
+    },
+    // Jev (TypeSafe System One) via the read-only `evaluate` MCP server: one
+    // tool that takes a state plus typed questions and returns probabilities.
+    // No credential is referenced here on purpose: `{env:...}` in this config
+    // fails the whole file to load when the variable is unset, which would
+    // break `agentctl check` and every Mac without the key. The child instead
+    // inherits the backend environment. See docs/jev-advisory-layer.md for
+    // TYPESAFE_API_KEY / OPENROUTER_API_KEY setup in shells, managed services,
+    // and Orca/Monocode private backends, plus boundaries and removal.
+    "typesafe": {
+      "type": "local",
+      "command": ["/Users/venkat/.local/bin/evaluate", "mcp"],
+      "enabled": true
+    }
+  },
+
   // Change model routing only here, then run `agentctl sync`.
   // `agentctl review-models` validates these IDs against the live catalog.
   // Build defaults to deepseek-v4.1-flash to match the Synara Build role.
