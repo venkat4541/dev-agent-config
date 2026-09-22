@@ -34,7 +34,7 @@ Scope routing runs automatically before implementation requests through the glob
 | --- | --- | --- |
 | Cheap exploration/context gathering | explorer | `opencode-go/mimo-v2.5` |
 | Contained, well-understood bug fix | quick-fix | `opencode-go/gpt-5.6-luna` |
-| Default interactive and substantial coding (Synara **Build**) | default sessions, implementer, frontend, backend, database | `opencode-go/deepseek-v4.1-flash` |
+| Default interactive and substantial coding | default sessions, implementer, frontend, backend, database | `opencode-go/deepseek-v4.1-flash` |
 | Cost-efficient tests | tester | `opencode-go/gpt-5.6-luna` |
 | Architecture, difficult debugging, final/security review | architect, reviewer, security-reviewer | `opencode-go/glm-5.3` |
 

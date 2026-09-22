@@ -37,7 +37,8 @@
 
   // Change model routing only here, then run `agentctl sync`.
   // `agentctl review-models` validates these IDs against the live catalog.
-  // Build defaults to deepseek-v4.1-flash to match the Synara Build role.
+  // Default interactive coding model; `agentctl review-models` validates it
+  // against the live provider catalog.
   "model": "opencode-go/deepseek-v4.1-flash",
 
   // Baseline for every agent. Agents below tighten this; none may loosen it.
