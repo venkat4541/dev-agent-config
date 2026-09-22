@@ -34,6 +34,6 @@ Independent questions are evaluated in parallel, so ask several in one call over
 
 ## Failure handling
 
-The server retries 429 and 529 responses itself. On a timeout or error, fall back to the existing deterministic rule and continue; do not retry in a loop from the agent. If the tool reports `unavailable`, abstain rather than guessing. A missing-credential error means `TYPESAFE_API_KEY` (or `OPENROUTER_API_KEY`) is not exported in the shell that launched OpenCode.
+The server retries 429 and 529 responses itself. On a timeout or error, fall back to the existing deterministic rule and continue; do not retry in a loop from the agent. If the tool reports `unavailable`, abstain rather than guessing. For a missing-credential error, check whether the backend that launched the MCP server received `TYPESAFE_API_KEY` or `OPENROUTER_API_KEY`. Follow the launch-mode setup in `docs/jev-advisory-layer.md`, including its Orca/Monocode guidance; a shell export or managed-service setting may not reach that backend. Check presence without printing secret values.
 
 Cost is about $0.042 per million input tokens with output free, and a typical call returns in a few hundred milliseconds. That is cheap enough for per-task routing and triage, not for a call per tool invocation. See `docs/jev-advisory-layer.md` for setup and removal.

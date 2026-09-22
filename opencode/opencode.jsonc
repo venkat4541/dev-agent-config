@@ -25,9 +25,9 @@
     // No credential is referenced here on purpose: `{env:...}` in this config
     // fails the whole file to load when the variable is unset, which would
     // break `agentctl check` and every Mac without the key. The child instead
-    // inherits the shell environment, so export TYPESAFE_API_KEY (or
-    // OPENROUTER_API_KEY) before launching OpenCode. See
-    // docs/jev-advisory-layer.md for the boundary and the removal path.
+    // inherits the backend environment. See docs/jev-advisory-layer.md for
+    // TYPESAFE_API_KEY / OPENROUTER_API_KEY setup in shells, managed services,
+    // and Orca/Monocode private backends, plus boundaries and removal.
     "typesafe": {
       "type": "local",
       "command": ["/Users/venkat/.local/bin/evaluate", "mcp"],
