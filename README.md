@@ -81,6 +81,7 @@ Skills are loaded on demand, selected by their description, so each one states t
 | `accessibility` | any interactive UI, dialog, form, or focus and announcement behaviour |
 | `frontend-design` | a new surface with no pattern to copy; judging whether a UI is finished |
 | `git-workflow` | commit scope, checkpoints, worktree splits, handoff reports |
+| `jev-decisions` | a typed probability is wanted for routing, classification, scoring, or pre-review screening |
 
 Process skills, which gate work rather than describe a domain:
 
@@ -185,9 +186,9 @@ Use `agentctl sync` after pulling configuration changes. Keep credentials, local
 ## Troubleshooting and updates
 
 - `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings. Required tools (`git`, `node`, `pnpm`, `opencode`, `superset`, `gh`, `jq`) fail; optional ones (`supabase`, `tailscale`, the linters, VS Code, Warp) only warn, since the `tailscale-app` cask may install the app without a CLI.
-- `agentctl check` runs `shellcheck` over the scripts, `gitleaks` over history, and confirms the OpenCode config loads and that the read-only agents still cannot commit or push. The same checks run in CI via `.github/workflows/check.yml`.
+- `agentctl check` runs `shellcheck` over the scripts, `gitleaks` over history, and confirms the OpenCode config loads and that the read-only agents still cannot commit or push. On OpenCode v2 that config-load step reports SKIP rather than a false pass: v2 dropped `opencode agent list`, resolves configuration through its background service, and starts even with a malformed file, so there is no isolated non-interactive probe. The content checks below it still assert agents, permissions, prompts, and skills from the file. The same checks run in CI via `.github/workflows/check.yml`.
 - `agentctl review-models` verifies the live OpenCode Go catalog against routing and flags new or unavailable models; `agentctl review-models --apply` updates chosen routing after confirmation. It stores only a local, non-secret model-name snapshot under `~/.cache/agentctl/`.
-- If OpenCode does not see agents, run `opencode agent list` and check that the relevant path under `~/.config/opencode` is a symlink.
+- If OpenCode does not see agents, run `opencode debug agents` (v2) or `opencode agent list` (v1), and check that the relevant path under `~/.config/opencode` is a symlink.
 - If a model is unavailable, use OpenCode `/models` to confirm account availability, then update centralized default routing if needed and run `agentctl sync`.
 - Superset CLI commands evolve while the product is in beta; update it with Homebrew and consult `superset --help` before relying on a new workflow.
 - To update tools and configuration, pull this repository, review `git diff`, run `./scripts/install-tools.sh`, then `agentctl sync`.

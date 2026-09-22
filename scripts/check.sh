@@ -47,6 +47,13 @@ fi
 
 # The config is JSONC with comments, so OpenCode itself is the only authority
 # on whether it parses and satisfies the schema.
+#
+# V1 accepts an isolated config home and fails on a file it cannot parse. V2
+# dropped `opencode agent list`, resolves configuration through its background
+# service (which ignores XDG_CONFIG_HOME), and starts even with a malformed
+# file, so no isolated, non-interactive probe exists. On v2 this step reports
+# SKIP rather than passing a check that proves nothing; the content checks
+# below still assert agents, permissions, prompts, and skills from the file.
 if command -v opencode >/dev/null 2>&1; then
   probe_home="$(mktemp -d)"
   mkdir -p "$probe_home/opencode"
@@ -55,7 +62,9 @@ if command -v opencode >/dev/null 2>&1; then
   ln -s "$repo_root/opencode/commands" "$probe_home/opencode/commands"
   ln -s "$repo_root/opencode/skills" "$probe_home/opencode/skills"
   if XDG_CONFIG_HOME="$probe_home" opencode agent list >/dev/null 2>&1; then
-    pass "OpenCode loads opencode/opencode.jsonc"
+    pass "OpenCode loads opencode/opencode.jsonc (v1, isolated copy)"
+  elif [[ "$(opencode --version 2>/dev/null | grep -oE '[0-9]+' | head -1)" == "2" ]]; then
+    skip "OpenCode v2 has no isolated config-load probe (service-resolved config); content checks below assert the file"
   else
     fail "OpenCode could not load opencode/opencode.jsonc"
   fi
