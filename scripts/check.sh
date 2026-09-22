@@ -45,6 +45,21 @@ else
   skip "gitleaks is not installed; run ./scripts/install-tools.sh"
 fi
 
+# A best-effort JSONC parse catches structural damage (unbalanced or
+# unterminated braces, doubled commas) on every machine, including OpenCode v2
+# where no isolated load probe exists. Bun's parser recovers from some
+# malformed input rather than rejecting it, so this is a smoke check, not the
+# authority the v1 probe below is. bun is in the Brewfile.
+if command -v bun >/dev/null 2>&1; then
+  if bun -e 'try { Bun.JSONC.parse(require("fs").readFileSync(0, "utf8")); } catch { process.exit(1); }' < opencode/opencode.jsonc; then
+    pass "opencode/opencode.jsonc passes a best-effort JSONC syntax parse (bun)"
+  else
+    fail "opencode/opencode.jsonc has fatal JSONC syntax errors"
+  fi
+else
+  skip "bun is not installed; JSONC syntax was not checked"
+fi
+
 # The config is JSONC with comments, so OpenCode itself is the only authority
 # on whether it parses and satisfies the schema.
 #

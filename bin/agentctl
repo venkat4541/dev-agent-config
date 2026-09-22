@@ -96,21 +96,53 @@ report before work begins, use: /route-task <request>
 EOF
 }
 
-# Prove a candidate config actually loads before it becomes the real one.
-# OpenCode is its own authority on JSONC syntax and schema, so validate by
-# pointing a throwaway config home at the candidate and listing agents.
+# Prove a candidate config is safe to promote before it becomes the real one.
+#
+# V1 accepts an isolated config home, so OpenCode itself is the authority:
+# point a throwaway config home at the candidate and list agents.
+#
+# V2 dropped `opencode agent list`, resolves configuration through its
+# background service, and starts even with a malformed file, so no isolated
+# load probe exists. There, prove what can be proven: the file parses as JSONC
+# (best-effort; Bun's parser recovers from trailing junk), every agent is still
+# registered, and every referenced prompt file resolves. The parse covers the
+# rewrite's realistic failure modes — a doubled or dropped comma, an
+# unbalanced brace. That is weaker than a real load, so the caller's message
+# does not claim one.
 validate_config() {
-  local candidate="$1" probe_home rc=0
-  probe_home="$(mktemp -d)"
-  mkdir -p "$probe_home/opencode"
-  cp "$candidate" "$probe_home/opencode/opencode.jsonc"
-  # Agent prompts are referenced as {file:./agents/...} and must resolve.
-  ln -s "$repo_root/opencode/agents" "$probe_home/opencode/agents"
-  ln -s "$repo_root/opencode/commands" "$probe_home/opencode/commands"
-  ln -s "$repo_root/opencode/skills" "$probe_home/opencode/skills"
-  XDG_CONFIG_HOME="$probe_home" opencode agent list >/dev/null 2>&1 || rc=$?
-  rm -rf "$probe_home"
-  return "$rc"
+  local candidate="$1" probe_home rc=0 major
+  if command -v opencode >/dev/null 2>&1; then
+    probe_home="$(mktemp -d)"
+    mkdir -p "$probe_home/opencode"
+    cp "$candidate" "$probe_home/opencode/opencode.jsonc"
+    # Agent prompts are referenced as {file:./agents/...} and must resolve.
+    ln -s "$repo_root/opencode/agents" "$probe_home/opencode/agents"
+    ln -s "$repo_root/opencode/commands" "$probe_home/opencode/commands"
+    ln -s "$repo_root/opencode/skills" "$probe_home/opencode/skills"
+    XDG_CONFIG_HOME="$probe_home" opencode agent list >/dev/null 2>&1 || rc=$?
+    rm -rf "$probe_home"
+    [[ $rc -eq 0 ]] && return 0
+    major="$(opencode --version 2>/dev/null | grep -oE '[0-9]+' | head -1)"
+    [[ "$major" == "1" ]] && return 1
+  fi
+  validate_config_v2 "$candidate"
+}
+
+validate_config_v2() {
+  local candidate="$1" prompt_ref
+  command -v bun >/dev/null 2>&1 || {
+    echo "bun is required to validate a config on OpenCode v2." >&2
+    return 1
+  }
+  bun -e 'try { Bun.JSONC.parse(require("fs").readFileSync(0, "utf8")); } catch { process.exit(1); }' < "$candidate" || return 1
+  local agent
+  for agent in explorer architect implementer quick-fix frontend backend database tester reviewer security-reviewer; do
+    grep -q "\"$agent\": {" "$candidate" || return 1
+  done
+  while IFS= read -r prompt_ref; do
+    [[ -f "$repo_root/opencode/${prompt_ref#./}" ]] || return 1
+  done < <(sed -n 's/.*"prompt": "{file:\([^}]*\)}".*/\1/p' "$candidate")
+  return 0
 }
 
 review_models() {
@@ -275,14 +307,14 @@ EOF
   done < "$config_file"
 
   if ! validate_config "$temp_file"; then
-    echo "The rewritten configuration failed to load; the original is untouched." >&2
+    echo "The rewritten configuration failed validation; the original is untouched." >&2
     echo "Rejected candidate kept for inspection: $temp_file" >&2
     exit 1
   fi
 
   cp "$config_file" "$config_file.backup.$(date +%Y%m%d-%H%M%S)"
   mv "$temp_file" "$config_file"
-  echo "Updated opencode/opencode.jsonc (validated with 'opencode agent list')."
+  echo "Updated opencode/opencode.jsonc (validated before replacing the file)."
   echo "A timestamped backup is beside it. Review the diff, run 'agentctl sync', then commit this configuration checkpoint."
 }
 
