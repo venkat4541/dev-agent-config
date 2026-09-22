@@ -1,6 +1,6 @@
 # Dev agent config
 
-Reusable, non-secret configuration for a Mac development workflow built around OpenCode, Superset worktrees, GitHub, VS Code, Supabase, and Tailscale.
+Reusable, non-secret configuration for a Mac development workflow built around OpenCode, Orca worktrees, GitHub, VS Code, Supabase, and Tailscale.
 
 For the complete operating guide, see [WORKFLOWS.md](WORKFLOWS.md).
 
@@ -121,11 +121,11 @@ Bootstrap also adds one clearly marked, idempotent line group to `~/.zprofile`. 
 
 If several clones of this repository exist on one Mac, the one that last ran `agentctl sync` owns `~/.config/opencode`. `agentctl doctor` verifies each link resolves into the checkout it is run from and fails with the offending path when it does not.
 
-The bundled Brewfile includes pnpm, Supabase CLI, Superset CLI, OpenCode, GitHub CLI, Tailscale, VS Code, and a few small development utilities. It does not run any login or put credentials into this repository.
+The bundled Brewfile includes pnpm, Supabase CLI, OpenCode, GitHub CLI, Tailscale, VS Code, and a few small development utilities. Orca ships from its own distribution, not Homebrew, so install the Orca app separately. The Brewfile does not run any login or put credentials into this repository.
 
 ## Warp Agent Cockpit
 
-`agentctl sync` links the versioned Warp Tab Config into `~/.warp/tab_configs/agent_cockpit.toml`. In Warp, choose **Agent Cockpit** from the new-tab `+` menu, select a project repository, and it opens an OpenCode pane beside live project usage and local Superset-workspace panes. Use the Superset desktop app as the authoritative live view for agent terminals across worktrees and Macs.
+`agentctl sync` links the versioned Warp Tab Config into `~/.warp/tab_configs/agent_cockpit.toml`. In Warp, choose **Agent Cockpit** from the new-tab `+` menu, select a project repository, and it opens an OpenCode pane beside live project usage and local Orca-worktree panes. Use the Orca app as the live view for agent terminals across worktrees and hosts.
 
 ## Separate per-Mac logins
 
@@ -133,11 +133,10 @@ Perform these on each Mac after bootstrap:
 
 ```bash
 gh auth login
-superset auth login
 supabase login
 ```
 
-Then open OpenCode and use `/connect` → **OpenCode Go** to authenticate, and sign in to Tailscale through its app or `tailscale up`. Do not copy any of these resulting credentials through Git. VS Code is installed by Homebrew; use its **Shell Command: Install 'code' command in PATH** command if you want the optional `code` shell launcher.
+Install the Orca app separately and sign in there; Orca is not distributed through Homebrew. Then open OpenCode and use `/connect` → **OpenCode Go** to authenticate, and sign in to Tailscale through its app or `tailscale up`. Do not copy any of these resulting credentials through Git. VS Code is installed by Homebrew; use its **Shell Command: Install 'code' command in PATH** command if you want the optional `code` shell launcher.
 
 ## Existing-project workflow
 
@@ -151,7 +150,7 @@ opencode .
 
 `init-existing` refuses a dirty Git state, detects the package manager, and creates `AGENTS.md` only if one does not already exist. It never overwrites an existing project instruction file. In OpenCode, run `/analyze-project <task>` and then `/plan-feature <task>` for non-trivial work. Use OpenCode `/init` to enrich the project file with repository-specific build/test details when you want its interactive analysis.
 
-Implement only after the plan identifies the affected boundaries. Split work into Superset worktrees only when the work is actually independent. Then use `/verify <scope>`, `/review <scope>`, and run the project’s production build. Merge only after the relevant checks and independent review succeed.
+Implement only after the plan identifies the affected boundaries. Split work into Orca worktrees only when the work is actually independent. Then use `/verify <scope>`, `/review <scope>`, and run the project’s production build. Merge only after the relevant checks and independent review succeed.
 
 ## Greenfield workflow
 
@@ -167,17 +166,17 @@ The command uses `pnpm create next-app`, writes a project `AGENTS.md` plus `docs
 
 Add local environment values only to ignored files such as `.env.local`; commit a `.env.example` containing names and safe placeholders, never real values. Treat `SUPABASE_SERVICE_ROLE_KEY` as server-only and never expose it through `NEXT_PUBLIC_*`.
 
-## Superset worktrees
+## Orca worktrees
 
-Superset workspaces are isolated Git worktrees. Use this rule:
+Orca workspaces are isolated Git worktrees. Use this rule:
 
 > One worktree = one independently mergeable unit of work.
 
 It is not a mapping of worktrees to agent roles. An explorer and reviewer can investigate the same worktree read-only; parallel implementation needs separate branches/worktrees with clear file ownership.
 
-For daily use, run `agentctl start-task <task-name>` from a clean project checkout. It detects the registered local Superset project, verifies `origin/main`, and creates `feat/<task-name>` from `main`. Pass a second argument only when you intentionally want a different pushed base branch.
+For daily use, run `agentctl start-task <task-name>` from a clean project checkout. It registers the checkout with Orca on first use, verifies `origin/main`, and creates an Orca worktree from the base branch. Pass a second argument only when you intentionally want a different pushed base branch. Orca names the branch `<git-user>/<task-name>`; the command prints the worktree path and branch.
 
-For a pnpm Next.js project, `templates/new-next-supabase/superset.config.json.example` shows the sensible `pnpm install` / `pnpm dev` default. Review the package manager, environment files, services, ports, and monorepo cwd for each real repository before moving that example to `.superset/config.json`. Keep machine-local additions in ignored `.superset/config.local.json`; arrange any environment copying locally rather than committing secrets. Validate each project config by creating a throwaway Superset workspace before relying on it.
+Configure each repository's setup hook in the Orca app (for example `pnpm install`) instead of committing a separate worktree config; Orca runs it when it creates a worktree. Keep machine-local additions out of the repository, and arrange any environment copying locally rather than committing secrets.
 
 ## Multi-Mac replication
 
@@ -186,16 +185,16 @@ For a pnpm Next.js project, `templates/new-next-supabase/superset.config.json.ex
 3. Run `./scripts/bootstrap-mac.sh` and `agentctl doctor`.
 4. Complete the separate logins above and verify `/models` in OpenCode.
 
-Use `agentctl sync` after pulling configuration changes. Keep credentials, local `.env` files, and Superset/OpenCode/Tailscale sessions local to each Mac. For application work, commit and push each verified milestone before switching Macs; see [Cross-Mac Git checkpoints](WORKFLOWS.md#cross-mac-git-checkpoints).
+Use `agentctl sync` after pulling configuration changes. Keep credentials, local `.env` files, and Orca/OpenCode/Tailscale sessions local to each Mac. For application work, commit and push each verified milestone before switching Macs; see [Cross-Mac Git checkpoints](WORKFLOWS.md#cross-mac-git-checkpoints).
 
 ## Troubleshooting and updates
 
-- `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings. Required tools (`git`, `node`, `pnpm`, `opencode`, `superset`, `gh`, `jq`) fail; optional ones (`supabase`, `tailscale`, the linters, VS Code, Warp) only warn, since the `tailscale-app` cask may install the app without a CLI.
+- `agentctl doctor` distinguishes missing tools/config links from separate sign-in warnings. Required tools (`git`, `node`, `pnpm`, `opencode`, `orca`, `gh`, `jq`) fail; optional ones (`supabase`, `tailscale`, the linters, VS Code, Warp) only warn, since the `tailscale-app` cask may install the app without a CLI.
 - `agentctl check` runs `shellcheck` over the scripts, `gitleaks` over history, and confirms the OpenCode config loads and that the read-only agents still cannot commit or push. On OpenCode v2 that config-load step reports SKIP rather than a false pass: v2 dropped `opencode agent list`, resolves configuration through its background service, and starts even with a malformed file, so there is no isolated non-interactive probe. The content checks below it still assert agents, permissions, prompts, and skills from the file. The same checks run in CI via `.github/workflows/check.yml`.
 - `agentctl review-models` verifies the live provider catalog against routing and flags new or unavailable models; `agentctl review-models --apply` updates chosen routing after confirmation, validating the rewritten file before replacing it (on v2 that is a best-effort JSONC parse plus registration and prompt checks, because v2 has no isolated loader). It stores only a local, non-secret model-name snapshot under `~/.cache/agentctl/`.
 - If OpenCode does not see agents, run `opencode debug agents` (v2) or `opencode agent list` (v1), and check that the relevant path under `~/.config/opencode` is a symlink.
 - If a model is unavailable, use OpenCode `/models` to confirm account availability, then update centralized default routing if needed and run `agentctl sync`.
-- Superset CLI commands evolve while the product is in beta; update it with Homebrew and consult `superset --help` before relying on a new workflow.
+- Orca is a separate app install, not Homebrew; update it from the app. Use `orca --help` and `orca skills get orca-cli` for the current command surface.
 - To update tools and configuration, pull this repository, review `git diff`, run `./scripts/install-tools.sh`, then `agentctl sync`.
 
 ## T3 and Tailscale later

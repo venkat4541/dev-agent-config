@@ -7,7 +7,7 @@ This is the operating guide for the reusable `dev-agent-config` repository. It s
 ```text
 Mac setup (once)
   └─ Project onboarding (once per repository; committed)
-       └─ Superset worktree (one independently mergeable task)
+       └─ Orca worktree (one independently mergeable task)
             └─ OpenCode session in that worktree
 ```
 
@@ -26,7 +26,7 @@ agentctl doctor
 
 The bootstrap installs the Brewfile tools, links the reusable OpenCode files from this repository into `~/.config/opencode`, links `agentctl` into `~/.local/bin`, and ensures Homebrew tools precede legacy Node shims in new terminal sessions.
 
-It also links the reusable **Agent Cockpit** Warp Tab Config. In Warp, use the new-tab `+` menu, select **Agent Cockpit**, and choose the project repository. The focused pane starts OpenCode; the other panes refresh project usage and local Superset workspace state. Keep the Superset desktop app open for the complete live agent/terminal dashboard.
+It also links the reusable **Agent Cockpit** Warp Tab Config. In Warp, use the new-tab `+` menu, select **Agent Cockpit**, and choose the project repository. The focused pane starts OpenCode; the other panes refresh project usage and local Orca worktree state. Keep the Orca app open for the complete live agent/terminal dashboard.
 
 Open a new terminal after bootstrap. If `agentctl` is not found, run:
 
@@ -41,12 +41,10 @@ Credentials remain local to each Mac. Do not copy them through Git.
 
 ```bash
 gh auth login
-superset start
-superset auth login
 supabase login
 ```
 
-Open OpenCode and run `/connect`, then choose **OpenCode Go**. Run `/models` to confirm the account’s currently available models.
+Install and sign in to the Orca app separately; it is not distributed through Homebrew. Open OpenCode and run `/connect`, then choose **OpenCode Go**. Run `/models` to confirm the account’s currently available models.
 
 Install and connect Tailscale interactively:
 
@@ -119,36 +117,20 @@ Preserve the repository’s architecture and conventions. The global setup must 
 
 The same classification runs automatically before implementation requests. Run `/route-task` explicitly when you want to inspect and approve the route before the work begins.
 
-### 4. Add Superset support after project-specific inspection
+### 4. Add project setup for Orca worktrees
 
-Inspect the package manager, lockfile, environment files, services, ports, and monorepo layout first. Create `.superset/config.json` only after that review.
+Inspect the package manager, lockfile, environment files, services, ports, and monorepo layout first. Then set the repository's setup hook in the Orca app (repository settings → setup), for example an idempotent `pnpm install --frozen-lockfile`. Orca runs it when it creates a worktree. Keep environment copying local and ignored; never commit a secret. There is no committed worktree config file to maintain.
 
-For a typical pnpm project, the shape is:
+### 5. Register the repository with Orca
 
-```json
-{
-  "setup": ["./.superset/setup.sh"],
-  "run": ["pnpm dev"]
-}
-```
-
-The setup script should be idempotent, normally run `pnpm install --frozen-lockfile`, and copy only necessary ignored local environment files from the primary checkout. Commit `.superset/config.json` and `.superset/setup.sh`; keep `.superset/config.local.json` ignored for personal extensions.
-
-### 5. Register the repository with Superset on each host Mac
-
-Run this once on every Mac that will create worktrees for the project:
+Run this once per Orca host that will create worktrees for the project (the Mac, or the miniPC VM runtime):
 
 ```bash
-superset projects create --local \
-  --name existing-project \
-  --import /absolute/path/to/existing-project
+orca repo add --path /absolute/path/to/existing-project --json
+orca repo list --json
 ```
 
-Capture the returned `projectId`. You can list registered projects with:
-
-```bash
-superset projects list --local --json
-```
+`agentctl start-task` registers the checkout automatically if it is missing, so this is only needed when you want to set the base ref or hooks up front.
 
 ### 6. Create a task worktree
 
@@ -158,12 +140,12 @@ For normal feature work, start from any clean project checkout and run:
 agentctl start-task concise-task-name
 ```
 
-The command detects the local Superset project by repository path, fetches and verifies `origin/main`, and creates `feat/concise-task-name` from `main`. Pass `agentctl start-task concise-task-name other-pushed-branch` only when deliberately using a different base. If the repository has not yet been registered on this Mac, the command registers it before creating the task worktree. Superset worktrees are based on remote branch history, so commit and push shared project setup to `main` before using it as a worktree base.
+The command registers the checkout with Orca if needed, fetches and verifies `origin/main`, and creates an Orca worktree from that base. Orca names the branch `<git-user>/<concise-task-name>` and prints the path. Pass `agentctl start-task concise-task-name other-pushed-branch` only when deliberately using a different base. Orca worktrees are based on remote branch history, so commit and push shared project setup to `main` before using it as a worktree base.
 
 Inside the new worktree:
 
 ```bash
-cd <Superset-worktree-path>
+cd <Orca-worktree-path>
 opencode .
 code .
 ```
@@ -193,7 +175,7 @@ agentctl start-task account-notifications
 Open the returned worktree path in OpenCode and VS Code:
 
 ```bash
-cd <Superset-worktree-path>
+cd <Orca-worktree-path>
 opencode .
 code .
 ```
@@ -296,7 +278,7 @@ Complete `docs/architecture.md` with:
 5. Supabase RLS policy matrix for read, create, update, and delete paths.
 6. Frontend feature/component organization.
 7. Unit, integration, E2E, accessibility, and production-build strategy.
-8. Only genuinely independent workstreams suitable for Superset worktrees.
+8. Only genuinely independent workstreams suitable for Orca worktrees.
 
 Prefer a single coherent application. Do not add microservices or extra infrastructure without a specific need.
 
@@ -315,14 +297,14 @@ Rules:
 
 Before parallel work, make a small working skeleton: routes, data boundary, authentication/RLS foundations, component conventions, test harness, and deployment/build command. Then commit and push that base branch.
 
-### 5. Add project-specific Superset support
+### 5. Add project-specific Orca setup
 
-Review `superset.config.json.example`, adapt it to the project, commit it, register the project with Superset on each host Mac, and verify it with one disposable worktree before using it for real work.
+Set the repository's setup hook in the Orca app, register the project with Orca on each host, and verify it with one disposable worktree before using it for real work.
 
 ## Working in a task worktree
 
 1. Start from any clean checkout; task worktrees default to pushed `main`.
-2. Create one Superset worktree for one mergeable task.
+2. Create one Orca worktree for one mergeable task.
 3. Run OpenCode inside that worktree.
 4. Explore and plan before complex changes.
 5. Make focused changes; avoid unrelated refactors.
@@ -362,7 +344,7 @@ Record the commit SHA, branch, checks run, remaining risks, and next action in t
 
 ## Machine-specific notes
 
-Registered Superset project IDs, absolute checkout paths, and per-Mac quirks are host-specific and do not belong in a repository that is cloned onto several Macs. Keep them in `NOTES.local.md`, which is git-ignored:
+Registered Orca repo ids, absolute checkout paths, and per-host quirks are host-specific and do not belong in a repository that is cloned onto several Macs. Keep them in `NOTES.local.md`, which is git-ignored:
 
 ```bash
 cd ~/projects/dev-agent-config
@@ -374,12 +356,12 @@ A useful shape for each project:
 ```text
 project: <name>
 checkout: <absolute path on this Mac>
-superset projectId: <id from `superset projects list --local --json`>
+orca repoId: <id from `orca repo list --json`>
 base branch: main
-local env files the Superset setup script copies: <names, never values>
+local env files the Orca setup hook copies: <names, never values>
 ```
 
-`agentctl start-task` resolves the Superset project from the repository path automatically, so nothing here is required for daily use — it is a reference for when a project ID or a host-specific setup detail is needed.
+`agentctl start-task` resolves the Orca repo from the repository path automatically, so nothing here is required for daily use — it is a reference for when a repo id or a host-specific setup detail is needed.
 
 ## Troubleshooting
 
@@ -391,7 +373,7 @@ local env files the Superset setup script copies: <names, never values>
 | An agent asks to run `sed`, `find`, or `git push` | Expected. Those are not allowlisted: `sed -i` and `find -exec` would bypass the edit and directory rules, and pushing is outward-facing. Approve deliberately. |
 | A read-only agent tries to edit or commit | It cannot; `edit`, `git commit`, and `git push` are denied for `explorer`, `architect`, `reviewer`, `security-reviewer`, and `tester`. Route the work to an implementation agent. |
 | OpenCode has no models | Run `/connect` → OpenCode Go, then `/models`. |
-| Superset host service is stale | `superset stop && superset start`, then `superset status`. |
-| Worktree misses new setup files | Commit and push the setup branch first; Superset worktrees use remote branch history. |
-| Local environment is missing in a worktree | Add an explicit, ignored-file copy rule to the project `.superset/setup.sh`; do not commit the environment file. |
+| Orca runtime is not reachable | Open the Orca app, or restart `orca serve` on the host. |
+| Worktree misses new setup files | Commit and push the setup branch first; Orca worktrees use remote branch history. |
+| Local environment is missing in a worktree | Add the copy to the repository's Orca setup hook; keep the environment file ignored and uncommitted. |
 | Tailscale is not available | Install `tailscale-app` interactively and complete System Settings approval. |

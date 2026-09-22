@@ -27,9 +27,9 @@ Orca mobile app ──pair over Tailscale─────────────
 
 The runtime's user data lives at `${XDG_CONFIG_HOME:-$HOME/.config}/orca` on Linux. It holds the pairing keypair and device-token registry (`orca-e2ee-keypair.json`, `orca-devices.json`). Treat that directory as a secret; never commit it, and never bake it into a VM image (see Security).
 
-## Replacing Superset
+## Superset is retired
 
-Orca already tracks the existing Superset worktrees under `~/.superset/worktrees/...` as external worktrees, so nothing is lost during the switch. The functional mapping:
+Superset is removed from this repository — Brewfile, `doctor`, `agentctl start-task`, templates, and docs. Orca tracked the existing Superset worktrees under `~/.superset/worktrees/...` as external worktrees, so nothing was lost in the switch. The mapping that guided it:
 
 | Superset role | Orca replacement |
 | --- | --- |
@@ -40,7 +40,7 @@ Orca already tracks the existing Superset worktrees under `~/.superset/worktrees
 | Auth (`superset auth login`) | `orca account add` / runtime pairing; agent CLIs log in on the host |
 | Ticket flow | `orca-linear` skill over `orca linear …` |
 
-The migration is a re-registration, not a rewrite: register each repo once with `orca repo add`, move any `superset.config.json` setup/run commands into the repo's Orca hook settings, then drop Superset from the install and docs.
+The migration was a re-registration, not a rewrite: each repo is registered once with `orca repo add`, setup/run commands live in the repo's Orca hook settings, and `agentctl start-task` creates Orca worktrees.
 
 ## Setup on the miniPC VM
 
@@ -53,16 +53,16 @@ Steps marked **[you]** are human-only (provisioning, interactive logins); the re
 5. **Start the runtime** (foreground to observe, then a service unit):
    ```bash
    orca serve \
-     --port <port> \
-     --pairing-address wss://<vm-magicdns-name>:<port> \
+     --port 6768 \
+     --pairing-address ws://<vm-magicdns-name>:6768 \
      --mobile-pairing
    ```
-   `--pairing-address` only changes the address advertised to clients; pass the Tailscale-reachable endpoint. It prints the mobile pairing QR/link, and a browser URL when the web client bundle is present.
+   `--pairing-address` only changes the address advertised to clients; pass the Tailscale-reachable endpoint. Tailscale already encrypts the transport, so `ws://` is enough; use `wss://` only if you terminate TLS with `tailscale serve`. The command prints the mobile pairing QR/link, and a browser URL when the web client bundle is present.
 6. **Pair the clients.**
    - macOS app: `orca environment add --name miniPC --pairing-code 'orca://pair?code=…'`
    - Mobile app: scan the QR from step 5.
    Both then see one runtime and the same worktrees.
-7. **Register repos** on the runtime: `orca repo add --path <abs/path>` for each project (clone them on the VM first if they do not live there), and set the base ref with `orca repo set-base-ref`.
+7. **Register repos** on the runtime. Clone each project on the VM (the harness is independent of the Mac), then `orca repo add --path <abs/path>` and `orca repo set-base-ref --repo id:<id> --ref origin/main`.
 
 ## Security
 
@@ -72,12 +72,11 @@ Steps marked **[you]** are human-only (provisioning, interactive logins); the re
 - **Never snapshot a VM on which `orca serve` has already run.** The first run creates the runtime user data, and everything in it — pairing keypair, device-token registry, agent-session authority key — is baked into the snapshot and shared by every VM booted from it. Snapshot before the first run, or delete the verified user-data directory first.
 - Agent and `gh` credentials live on the VM, not the Mac. Do not forward a desktop token over SSH.
 
-## Open decisions
+## Decisions
 
-These are required before the setup wizard can be written, and none can be inferred from this machine:
+- **Hypervisor:** Proxmox, with Orca running inside a Linux VM guest.
+- **Transport:** Tailscale. Port `6768` (the port the local runtime already uses); pairing address `ws://<vm-magicdns-name>:6768`.
+- **Repos:** cloned on the VM, so the harness runs independently of the Mac. The Mac keeps its own checkouts for editing; the VM's checkouts are authoritative for agent work.
+- **Superset:** removed from the repository.
 
-- miniPC OS and hypervisor (Proxmox, KVM/libvirt, UTM, a cloud VM, …), and the guest distribution.
-- Whether Orca runs on the VM guest or directly on the miniPC host.
-- The runtime port, and the VM's Tailscale/MagicDNS name.
-- Whether repos are cloned on the VM or mounted from elsewhere.
-- Whether Superset is removed now or kept until the Orca path is proven.
+[`scripts/setup-orca-vm.sh`](../scripts/setup-orca-vm.sh) walks the human-only steps: Proxmox VM creation, toolchain install, interactive logins, Tailscale join, and pairing.
