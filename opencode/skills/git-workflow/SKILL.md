@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Keep changes focused and hand work off safely across worktrees and Macs — use when committing, deciding what belongs in one change, preparing a handoff or pull request, or working inside a Superset worktree.
+description: Keep changes focused and hand work off safely across worktrees and Macs — use when committing, deciding what belongs in one change, preparing a handoff or pull request, or working inside an Orca worktree.
 ---
 
 Inspect `git status` and `git diff` before editing, not only before committing. Keep one independently mergeable unit of work per branch and worktree, and do not rewrite unrelated history.
@@ -15,7 +15,7 @@ Stage deliberately. `git add -A` after a long session sweeps up scratch files, d
 
 Create a durable checkpoint:
 
-- After project onboarding, an architecture record, or Superset setup that other worktrees need.
+- After project onboarding, an architecture record, or Orca repo setup that other worktrees need.
 - After a coherent, verified implementation unit that can be independently reviewed or merged.
 - Before handing a task to another agent, moving to another Mac, or creating a worktree that depends on the branch.
 
@@ -29,7 +29,7 @@ Never use a commit or push as a substitute for verification.
 
 Subject line in the imperative, describing the change's effect rather than the activity ("Reject expired invite tokens", not "Fix bug in auth"). Explain *why* in the body when the reason is not obvious from the diff — the diff already shows what changed. Reference the issue or task when one exists.
 
-## Superset worktrees
+## Orca worktrees
 
 One worktree is one independently mergeable unit of work, not one agent role. Several agents — explorer, implementer, reviewer — can work in the same worktree; that is normal and preferred.
 

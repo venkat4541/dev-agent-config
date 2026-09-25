@@ -35,7 +35,7 @@ Load the guide for a subsystem before using it, and prefer `--json`. Use `--help
 - `orca terminal create|list|read|send|wait|switch|close` — live terminals. `orca terminal wait` blocks on an exit or tui-idle condition, which is what makes a scripted agent handoff deterministic.
 - `orca file open|diff|open-changed` — open a workspace file or its diff in the Orca editor.
 
-Superset also creates worktrees (`agentctl start-task`; see [README](../README.md#superset-worktrees)). Use one worktree tool per branch: Orca's advantage is that its terminals, orchestration, and ticket flow share one runtime, while the Superset desktop app remains the live cross-Mac view. Do not create the same branch through both.
+`agentctl start-task` creates Orca worktrees against a repo registered with `orca repo add`. Use one worktree per independently mergeable unit; see [README](../README.md#orca-worktrees).
 
 ## Orchestration
 

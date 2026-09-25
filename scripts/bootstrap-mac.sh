@@ -10,4 +10,4 @@ repo_root="$(cd "$script_dir/.." && pwd)"
 "$repo_root/bin/agentctl" doctor || true
 
 echo
-echo "Bootstrap complete. Complete separate logins for GitHub, OpenCode Go, Superset, Tailscale, and Supabase as needed."
+echo "Bootstrap complete. Complete separate logins for GitHub, OpenCode Go, Orca, Tailscale, and Supabase as needed."

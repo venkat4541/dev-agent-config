@@ -14,4 +14,4 @@ Inspect relevant local instructions, architecture, conventions, affected boundar
 
 Recommend agents by name only. Each agent's model is set centrally in `opencode.jsonc`; naming a model here would go stale the moment routing changes.
 
-Return evidence by path, the recommended agents, required verification, risks, and whether separate Superset worktrees are justified. Prefer the least complex route that is safe; never use scope classification as a reason to skip tests or security review.
+Return evidence by path, the recommended agents, required verification, risks, and whether separate Orca worktrees are justified. Prefer the least complex route that is safe; never use scope classification as a reason to skip tests or security review.
