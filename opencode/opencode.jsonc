@@ -9,11 +9,12 @@
   // without stealing focus). The binary lives in the installed CuaDriver.app
   // bundle and the ~/.local/bin wrapper proxies to it; macOS grants
   // Accessibility + Screen Recording to that bundle, not to this config.
-  // Privilege note: opencode's `permission` rules do not gate MCP tools, so
-  // every server below runs promptless. cua-driver can act on the desktop;
-  // `typesafe` only sends a payload to the TypeSafe API and returns typed
-  // decisions. Because neither is part of the permission model, Jev output is
-  // advice — never the sole gate for commit, push, auth, migrations, or review.
+  // Privilege note: v2 `permission` rules can gate MCP tools by their
+  // generated tool name (for example `typesafe_evaluate`), and the catch-all
+  // `"*": "ask"` below already prompts before these calls. Keep Jev advisory
+  // anyway: `typesafe` only sends a payload to the TypeSafe API and returns
+  // typed decisions, so its output is advice — never the sole gate for
+  // commit, push, auth, migrations, or review.
   "mcp": {
     "cua-driver": {
       "type": "local",
