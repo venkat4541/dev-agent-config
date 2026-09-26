@@ -124,9 +124,13 @@
       "model": "opencode-go/mimo-v2.5",
       "prompt": "{file:./agents/explorer.md}",
       // `edit: deny` alone is not read-only: the inherited shell allowlist has
-      // to be restated without any mutating command for the claim to hold.
+      // to be restated without any mutating command, and `task` must be denied
+      // outright — a subagent runs with its own permissions, not the parent's,
+      // so a read-only agent that could dispatch `implementer` would not be
+      // read-only for the claim to hold.
       "permission": {
         "edit": "deny",
+        "task": "deny",
         "external_directory": "deny",
         "bash": {
           "*": "ask",
@@ -155,6 +159,7 @@
       "prompt": "{file:./agents/architect.md}",
       "permission": {
         "edit": "deny",
+        "task": "deny",
         "external_directory": "deny",
         "bash": {
           "*": "ask",
@@ -219,6 +224,7 @@
       // Verification must never be the step that publishes work.
       "permission": {
         "edit": "ask",
+        "task": "deny",
         "external_directory": "deny",
         "bash": {
           "*": "ask",
@@ -246,6 +252,7 @@
       "prompt": "{file:./agents/reviewer.md}",
       "permission": {
         "edit": "deny",
+        "task": "deny",
         "external_directory": "deny",
         "bash": {
           "*": "ask",
@@ -274,6 +281,7 @@
       "prompt": "{file:./agents/security-reviewer.md}",
       "permission": {
         "edit": "deny",
+        "task": "deny",
         "external_directory": "deny",
         "bash": {
           "*": "ask",

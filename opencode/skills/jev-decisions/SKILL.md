@@ -27,7 +27,7 @@ Independent questions are evaluated in parallel, so ask several in one call over
 
 ## Boundaries
 
-- **Advisory, not enforcement.** MCP tools are not covered by OpenCode's `permission` rules, so a Jev answer must never be the only gate for a commit, push, merge, auth, migration, RLS, or review outcome. Deterministic rules and the review agents stay authoritative.
+- **Advisory, not enforcement.** OpenCode v2 can permission MCP tools by their generated tool name, such as `typesafe_evaluate`; this setup asks before MCP calls. A Jev answer must never be the only gate for a commit, push, merge, auth, migration, RLS, or review outcome. Deterministic rules and the review agents stay authoritative.
 - **Never put secrets in `state`.** The payload leaves the machine for the TypeSafe API. No `.env` contents, keys, tokens, or customer personal data.
 - **Do not use Jev for generation, arithmetic, dates, counting, or multi-step reasoning.** Its documented jaggedness covers exactly those; hand them to a normal model or to code.
 - **A probability is not proof.** Use it to order work and to route, not to claim correctness. Log the answer wherever the threshold lives.

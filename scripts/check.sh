@@ -102,7 +102,10 @@ else
 fi
 
 # Read-only agents must not be able to reach a mutating shell command. `edit:
-# deny` does not cover bash, so each one needs its own bash rules.
+# deny` does not cover bash, so each one needs its own bash rules. It also does
+# not cover dispatch: a spawned subagent runs with its own permissions, not a
+# subset of the parent's, so a read-only agent without `task: deny` could reach
+# `implementer` or another writer and mutate through it.
 for agent in explorer architect reviewer security-reviewer tester; do
   block="$(sed -n "/\"$agent\": {/,/^    }/p" opencode/opencode.jsonc)"
   if grep -q '"git push\*": "deny"' <<<"$block" && grep -q '"git commit\*": "deny"' <<<"$block"; then
@@ -110,7 +113,30 @@ for agent in explorer architect reviewer security-reviewer tester; do
   else
     fail "$agent lacks an explicit deny for git commit/push"
   fi
+  if grep -q '"task": "deny"' <<<"$block"; then
+    pass "$agent cannot dispatch a subagent"
+  else
+    fail "$agent lacks an explicit task deny and could dispatch a writer subagent"
+  fi
 done
+
+# Every check above reads this repository's file. OpenCode also merges any
+# other config document in the config directory, and combines sources with the
+# last matching rule winning, so a hand-written opencode.json beside the
+# symlink participates in the effective policy while remaining invisible here.
+# A second document is how a policy silently stops being the policy, so assert
+# its absence. Scoped to a checkout that actually owns the config directory, so
+# CI and a second clone report SKIP instead of a false failure.
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+if [[ -L "$config_home/opencode.jsonc" && "$(readlink "$config_home/opencode.jsonc")" == "$repo_root/opencode/opencode.jsonc" ]]; then
+  if [[ -e "$config_home/opencode.json" ]]; then
+    fail "A second config document shadows the repository policy: $config_home/opencode.json — remove it, or fold what it needs into opencode/opencode.jsonc and run 'agentctl sync'"
+  else
+    pass "No second config document shadows opencode.jsonc in $config_home"
+  fi
+else
+  skip "This checkout does not own $config_home; shadow-config check not applicable"
+fi
 
 # A skill is discovered by directory name but selected by its description, so a
 # name/directory mismatch or a missing description silently breaks triggering.

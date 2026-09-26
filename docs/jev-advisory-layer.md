@@ -13,7 +13,7 @@ Jev is TypeSafe AI's System One model: it answers typed questions with calibrate
 
 The server binary installs to `~/.local/bin` like the other local MCP servers:
 
-1. Install `evaluate` (release binary, or `go install github.com/itsmostafa/typesafe-mcp/cmd/evaluate@latest`); `evaluate update` upgrades it later.
+1. Install `evaluate` (release binary, or `go install github.com/itsmostafa/system-one-connector/cmd/evaluate@latest`); `evaluate update` upgrades it later.
 2. Make `TYPESAFE_API_KEY` (TypeSafe direct) or `OPENROUTER_API_KEY` available to the OpenCode backend that launches the MCP server. For a foreground backend, export it before starting that process. For Orca, Monocode, or the OpenCode v2 managed service, follow the launch-mode guidance below. Never add a key to this repository.
 3. Run `agentctl sync`, restart the relevant backend, and confirm that `typesafe` is connected in that client. `opencode mcp list` checks the CLI's selected backend; it may differ from the GUI's backend. A connected MCP server alone does not prove API authentication: ask for one harmless evaluation in the actual client to verify the key works.
 
@@ -41,10 +41,10 @@ Avoid putting real keys in `opencode service set env NAME VALUE`: the installed 
 
 ## Boundaries
 
-- MCP tools are not covered by OpenCode's `permission` rules. Treat every Jev answer as advisory input: it can order work, choose a route, or flag something for a look, but it must not be the only thing standing between an action and the repository. Commits, pushes, merges, auth, migrations, RLS, and review verdicts keep their deterministic gates and agent authority.
+- OpenCode v2 permission rules can target MCP tools by their generated tool name (for example, `typesafe_evaluate`). This configuration's catch-all permission is `ask`, so invoking Jev still requires approval. Keep Jev advisory: an answer may order work, choose a route, or flag something for a look, but it must not be the only gate for commits, pushes, merges, auth, migrations, RLS, or review verdicts. Keep those deterministic gates and agent authority in place.
 - `state` leaves the machine for the TypeSafe API. Never include credentials, `.env` contents, or customer personal data.
-- Jev 1.13 has documented jaggedness — literal reading, arithmetic, dates, counting, contradictory criteria. Keep those tasks with normal models or code.
-- Use `jev-latest` while experimenting. Pin an immutable version (for example `jev-1.13.0`) and log the returned version when a threshold depends on a specific calibration.
+- Jev 1.13 has documented jaggedness — literal reading, arithmetic, dates, counting, contradictory criteria. Score levels are weakly calibrated (the `>=0.9` confidence bucket has measured well below 0.9 accuracy) and structural invariants break (a question and its negation need not sum to 1), so never treat a probability as a hard gate. Keep those tasks with normal models or code.
+- Use `jev-latest` while experimenting. Pin an immutable version (for example `jev-1.13.0`) and log the returned version when a threshold depends on a specific calibration — `jev-latest` silently re-aims any threshold tuned on an earlier release, and the optimal threshold has moved substantially between datasets.
 
 ## Cost and latency
 
@@ -56,6 +56,6 @@ Delete the `mcp.typesafe` entry from `opencode/opencode.jsonc` and the `opencode
 
 ## Deferred candidates
 
-- **Skill routing** (`skillranker` and similar) targets a real cost here, because skill descriptions compete for selection. Deferred: the current tools are Linux-first and hook into Claude Code rather than OpenCode. Re-evaluate before wiring.
-- **Compaction** (`fast-jev-compaction` and ports) is the most publicized Jev use, but it is contested (compaction is not a filter) and compaction is a prompt-injection surface. Not wired.
-- **Local alternates**: Kev (Apache-2.0, Jev-compatible `/v1/systemone`) and `simple-jev` speak the same interface, so a local fallback is possible without changing how the skill is used.
+- **Skill routing** (`skillranker` and similar) targets a real cost here, because skill descriptions compete for selection. Deferred: `skillranker` now runs on macOS but still only hooks Claude Code, and OpenCode-compatible routers (`skill-injector`, `skill-finder`, `opencode-agent-skills-md`) are unverified here. Re-evaluate before wiring.
+- **Compaction** (`fast-jev-compaction` and ports) is the most publicized Jev use, but independent scorecards report its retention rule drops nearly all candidates and ties plain recency at matched budget, and compaction is a prompt-injection surface. Not wired.
+- **Local alternates**: no Jev-compatible local server is verified to exist — earlier notes here named Kev and `simple-jev`, but neither could be confirmed. If a real `/v1/systemone` implementation surfaces, a same-interface fallback would not change how the skill is used.
