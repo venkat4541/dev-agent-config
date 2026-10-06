@@ -93,3 +93,57 @@ Use `git diff` to review changes before rereading modified files. Use history to
 
 ## General
 Follow repository-local `CLAUDE.md`, `AGENTS.md`, and architecture docs for project-specific rules. Repository-local rules override generic workflow preferences when necessary.
+
+## Concrete Skills Policy
+
+Skills are optional workflows, not the default solution. Claude should first ask whether installed tools can solve the task directly.
+
+### Invocation order
+1. TypeScript/Python semantic tooling
+2. `fd`, `rg`, `jq`, `git`, Nx, Pyright, project-native checks
+3. Targeted source reads
+4. Lightweight/context-efficient exploration
+5. One specialized skill
+6. Heavyweight workflow only when complexity or risk warrants it
+
+Do not chain overlapping skills simply because they are installed.
+
+### Automatic-capable
+Keep only lightweight, frequently useful, low-side-effect skills visible for automatic invocation. A context-efficient repository exploration skill such as Caveman Explore belongs here if installed. It should be used only when exact files/symbols are unknown and targeted tools are insufficient.
+
+### Superpowers
+Use selectively for non-trivial debugging, substantial feature implementation, difficult TDD work, complex planning, or structured verification where the workflow adds value. Do not invoke heavyweight Superpowers workflows for obvious one-file fixes, renames, CSS/template tweaks, straightforward tests, or questions answered by LSP/CLI tools.
+
+### pstack
+If installed, treat pstack as the primary high-level engineering workflow rather than automatically combining it with an overlapping Superpowers workflow. Reserve expensive capabilities such as architecture analysis, arena, interrogate, or multi-agent workflows for ambiguous, cross-system, high-risk, performance/concurrency, or genuinely difficult tasks.
+
+### Overlap rule
+When several skills can solve the same problem, choose one primary workflow. Prefer the smallest workflow that can reliably complete the task.
+
+### Skill output
+Delegated skill/subagent work should return concise:
+- finding
+- evidence (path:symbol or path:line range)
+- relevant callers/dependencies
+- uncertainty/confidence
+- recommended next action
+
+Do not return large source dumps.
+
+### Model economics inside skills
+A skill does not justify an expensive model by itself. Use Haiku for bounded gathering, Sonnet for normal implementation, and Opus only for architecture, ambiguity, difficult debugging, security/privacy, conflicting evidence, or high-risk decisions.
+
+### Manual-only / hidden skills
+For skills rarely used, expensive, overlapping, or with side effects, prefer manual-only configuration rather than leaving them visible for automatic model invocation. In Claude Code, user-only skills can set `disable-model-invocation: true` in their SKILL.md frontmatter. For third-party/plugin skills you do not own, use Claude Code's skill override controls instead of editing vendor files.
+
+Candidates to keep manual/on-demand:
+- arena
+- interrogate
+- architecture/deep-design workflows
+- swarm/multi-agent workflows
+- duplicate planning/brainstorming workflows
+- deployment/release or other side-effecting skills
+- any skill you rarely invoke
+
+Review available skills periodically with `/skills`. Hide/manualize unused or overlapping skills rather than adding prose rules for every installed skill.
+
